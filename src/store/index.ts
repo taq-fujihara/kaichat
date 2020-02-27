@@ -21,10 +21,11 @@ export default new Vuex.Store({
     messages: new Array<ChatMessage>()
   },
   mutations: {
-    setUser(state, user: User) {
-      state.user.id = user.id;
-      state.user.name = user.name;
-      state.user.userPic = user.userPic;
+    setUser(state, { id, name, userPic, defaultRoom }) {
+      state.user.id = id;
+      state.user.name = name;
+      state.user.userPic = userPic;
+      state.user.defaultRoom = defaultRoom;
     },
     addMessages(state, messages: Array<ChatMessage>) {
       state.messages = [...state.messages, ...messages];
