@@ -1,8 +1,8 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
-import Home from "../views/Home.vue";
 import Rooms from "../views/Rooms.vue";
 import Room from "../views/Room.vue";
+import Messages from "../views/Messages.vue";
 import store from "@/store";
 
 Vue.use(VueRouter);
@@ -11,7 +11,6 @@ const routes = [
   {
     path: "/",
     name: "Home"
-    // redirect: { name: "Messages" }
   },
   {
     path: "/rooms",
@@ -27,7 +26,7 @@ const routes = [
   {
     path: "/rooms/:roomId/messages",
     name: "Messages",
-    component: Home,
+    component: Messages,
     props: true
   },
   {

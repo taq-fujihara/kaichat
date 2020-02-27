@@ -60,7 +60,7 @@ function scrollToBottom() {
 }
 
 export default {
-  name: "Home",
+  name: "Messages",
   components: {
     ChatMessage,
     ChatMessageMine
