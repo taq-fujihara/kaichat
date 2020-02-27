@@ -79,10 +79,10 @@ export default class Repository {
     };
   }
 
-  static async createRoom(room: Room) {
+  static async createRoom(name: string, members: Array<string>) {
     await db.collection("/rooms").add({
-      name: room.name,
-      members: room.members,
+      name: name,
+      members: members,
       createdAt: serverTimestamp()
     });
   }
