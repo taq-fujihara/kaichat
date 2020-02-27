@@ -3,12 +3,7 @@
     <div v-if="!isLast" class="guide-shadow" :class="{ even, isNextMe }"></div>
     <div v-if="!isLast" class="guide" :class="{ even, isNextMe }"></div>
 
-    <div class="user-pic">
-      <div class="user-pic__background"></div>
-      <div class="user-pic__image">
-        <img :src="userPic" />
-      </div>
-    </div>
+    <Avatar :photo-url="userPic" />
 
     <div class="chat-message">
       <div class="chat-message__background"></div>
@@ -31,8 +26,11 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from "vue-property-decorator";
+import Avatar from "@/components/Avatar.vue";
 
-@Component
+@Component({
+  components: { Avatar }
+})
 export default class ChatMessage extends Vue {
   @Prop() private text!: string;
   @Prop() private userPic!: string;
@@ -58,47 +56,6 @@ export default class ChatMessage extends Vue {
 
   &.even {
     margin-left: 16px;
-  }
-}
-
-.user-pic {
-  position: relative;
-
-  width: 50px;
-  height: 50px;
-
-  padding: 8px;
-  margin-right: 16px;
-
-  transform: skewX(10deg) rotate(2deg);
-
-  background-color: #000304;
-  color: #fff;
-
-  &__background {
-    position: absolute;
-    top: 5px;
-    bottom: 4px;
-    left: 4px;
-    right: 5px;
-    background-color: #fff;
-    transform: skewX(5deg) rotate(3deg);
-  }
-
-  &__image {
-    position: relative;
-    overflow: hidden;
-
-    height: 50px;
-    width: 50px;
-
-    img {
-      position: absolute;
-      left: -5px;
-      top: -5px;
-      height: 60px;
-      transform: skewX(-10deg) rotate(-2deg);
-    }
   }
 }
 
