@@ -1,5 +1,5 @@
 <template>
-  <div class="chat-message-wrapper">
+  <div class="chat-message-wrapper" :class="{ even }">
     <div v-if="!isLast" class="guide-shadow" :class="{ even, isNextMe }"></div>
     <div v-if="!isLast" class="guide" :class="{ even, isNextMe }"></div>
 
@@ -57,7 +57,7 @@ export default class ChatMessage extends Vue {
   margin-right: 64px;
 
   &.even {
-    margin-left: 24px;
+    margin-left: 16px;
   }
 }
 
