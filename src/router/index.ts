@@ -1,14 +1,27 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
 import Home from "../views/Home.vue";
+import Rooms from "../views/Rooms.vue";
+import store from "@/store";
 
 Vue.use(VueRouter);
 
 const routes = [
   {
     path: "/",
-    name: "Home",
-    component: Home
+    name: "Home"
+    // redirect: { name: "Messages" }
+  },
+  {
+    path: "/rooms",
+    name: "Rooms",
+    component: Rooms
+  },
+  {
+    path: "/rooms/:roomId/messages",
+    name: "Messages",
+    component: Home,
+    props: true
   },
   {
     path: "/about",
@@ -25,6 +38,21 @@ const router = new VueRouter({
   mode: "history",
   base: process.env.BASE_URL,
   routes
+});
+
+router.beforeEach((to, from, next) => {
+  if (to.name === "Home") {
+    next({
+      name: "Messages",
+      params: {
+        roomId: store.state.user.defaultRoom
+      }
+    });
+
+    return;
+  }
+
+  next();
 });
 
 export default router;
