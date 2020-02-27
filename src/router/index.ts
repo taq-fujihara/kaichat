@@ -2,6 +2,7 @@ import Vue from "vue";
 import VueRouter from "vue-router";
 import Home from "../views/Home.vue";
 import Rooms from "../views/Rooms.vue";
+import Room from "../views/Room.vue";
 import store from "@/store";
 
 Vue.use(VueRouter);
@@ -16,6 +17,12 @@ const routes = [
     path: "/rooms",
     name: "Rooms",
     component: Rooms
+  },
+  {
+    path: "/rooms/:roomId",
+    name: "Room",
+    component: Room,
+    props: true
   },
   {
     path: "/rooms/:roomId/messages",

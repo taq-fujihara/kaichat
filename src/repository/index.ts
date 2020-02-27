@@ -87,6 +87,27 @@ export default class Repository {
     });
   }
 
+  static async getRoom(id: string): Promise<Room> {
+    const roomDoc = await db.doc(`/rooms/${id}`).get();
+
+    if (!roomDoc.exists) {
+      throw new Error(`Room not found: ${id}`);
+    }
+
+    const data = roomDoc.data();
+
+    if (!data) {
+      throw new Error("Room data not found");
+    }
+
+    return {
+      id: roomDoc.id,
+      name: data.name,
+      members: data.members,
+      createdAt: data.createdAt
+    };
+  }
+
   static async getRooms(userId: string) {
     const roomsRef = await db
       .collection(`/rooms`)
