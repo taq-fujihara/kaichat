@@ -131,6 +131,13 @@ export default {
   async mounted() {
     await this.$store.dispatch("loadMessages", this.roomId);
     await this.$store.dispatch("loadMembers", this.roomId);
+    await Repository.setUsersDefaultRoom(
+      this.$store.state.user.id,
+      this.roomId
+    );
+  },
+  beforeDestroy() {
+    this.$store.dispatch("unsubscribeMessages");
   }
 };
 </script>

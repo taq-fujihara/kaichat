@@ -6,7 +6,7 @@ import { User } from "@/models/User";
 /**
  * 表示できる直近のメッセージ数
  */
-const CHAT_MESSAGE_LIMIT = 30;
+const CHAT_MESSAGE_LIMIT = 50;
 
 type DocumentSnapshot = firebase.firestore.DocumentSnapshot<
   firebase.firestore.DocumentData
@@ -77,6 +77,20 @@ export default class Repository {
       userPic: userData.userPic,
       defaultRoom: userData.defaultRoom
     };
+  }
+
+  /**
+   * ユーザーのデフォルトルームを設定する
+   *
+   * TODO 最後に見た部屋にしようかと思っている、、、
+   *
+   * @param userId ユーザーID
+   * @param roomId 部屋ID
+   */
+  static async setUsersDefaultRoom(userId: string, roomId: string) {
+    await db.doc(`/users/${userId}`).update({
+      defaultRoom: roomId
+    });
   }
 
   static async createRoom(name: string, members: Array<string>) {

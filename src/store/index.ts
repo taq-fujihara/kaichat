@@ -58,7 +58,22 @@ export default new Vuex.Store({
       });
     },
     async loadMembers({ state }, roomId: string) {
-      state.members = await Repository.getRoomMembers(roomId);
+      const users = await Repository.getRoomMembers(roomId);
+      // 自分を最後に
+      const me = users.find(u => u.id === state.user.id);
+      const usersButMe = users.filter(u => u.id !== state.user.id);
+      usersButMe.sort();
+
+      if (!me) {
+        throw new Error();
+      }
+
+      state.members = [...usersButMe, me];
+    },
+    unsubscribeMessages() {
+      if (unsubscribeMessages) {
+        unsubscribeMessages();
+      }
     }
   },
   modules: {}
