@@ -101,7 +101,11 @@ export default {
     async createRoom() {
       this.creatingRoom = true;
       try {
-        await Repository.createRoom(this.newRoom.name, this.newRoom.members);
+        await Repository.createRoom(
+          this.$store.state.user.id,
+          this.newRoom.name,
+          this.newRoom.members
+        );
       } catch (error) {
         this.creatingRoom = false;
         throw new Error(error);

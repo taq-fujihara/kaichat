@@ -93,10 +93,11 @@ export default class Repository {
     });
   }
 
-  static async createRoom(name: string, members: Array<string>) {
+  static async createRoom(owner: string, name: string, members: Array<string>) {
     await db.collection("/rooms").add({
-      name: name,
-      members: members,
+      owner,
+      name,
+      members,
       createdAt: serverTimestamp()
     });
   }
