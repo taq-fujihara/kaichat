@@ -39,6 +39,7 @@
           <textarea
             placeholder="Jot something down"
             v-model="message"
+            @keydown.enter="keyEnter"
           ></textarea>
         </div>
         <div class="action">
@@ -107,6 +108,10 @@ export default {
       }
     },
     async publishMessage() {
+      if (!this.message) {
+        return;
+      }
+
       this.sendingMessage = true;
 
       try {
@@ -123,6 +128,11 @@ export default {
 
       this.message = "";
       this.sendingMessage = false;
+    },
+    keyEnter(e) {
+      if (e.shiftKey) {
+        this.publishMessage();
+      }
     }
   },
   created() {
