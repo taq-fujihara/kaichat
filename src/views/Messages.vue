@@ -196,7 +196,7 @@ $bg-color: #000304;
 }
 
 .chat-messages {
-  max-width: 400px;
+  width: 400px;
   padding-bottom: calc(80px + 24px);
 }
 
