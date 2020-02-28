@@ -1,5 +1,5 @@
 <template>
-  <div class="avatar">
+  <div class="avatar" :class="{ 'avatar--small': isSmall }">
     <div class="avatar__background"></div>
     <div class="avatar__image">
       <img :src="photoUrl" />
@@ -12,18 +12,32 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 
 @Component
 export default class Avatar extends Vue {
-  @Prop() private msg!: string;
   @Prop() private photoUrl!: string;
   @Prop() private userName!: string;
+  @Prop({ default: false }) private isSmall!: boolean;
 }
 </script>
 
 <style scoped lang="scss">
+$size: 50px;
+$size-small: 35px;
+
 .avatar {
   position: relative;
 
-  width: 50px;
-  height: 50px;
+  &--small {
+    width: $size-small;
+    height: $size-small;
+
+    .avatar__image {
+      height: $size-small;
+      width: $size-small;
+
+      img {
+        height: $size-small + 10;
+      }
+    }
+  }
 
   padding: 8px;
   margin-right: 16px;
@@ -47,14 +61,14 @@ export default class Avatar extends Vue {
     position: relative;
     overflow: hidden;
 
-    height: 50px;
-    width: 50px;
+    width: $size;
+    height: $size;
 
     img {
       position: absolute;
       left: -5px;
       top: -5px;
-      height: 60px;
+      height: $size + 10;
       transform: skewX(-10deg) rotate(-2deg);
     }
   }

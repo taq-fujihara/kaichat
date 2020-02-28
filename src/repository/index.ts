@@ -108,6 +108,35 @@ export default class Repository {
     };
   }
 
+  /**
+   * 部屋のメンバーを取得する
+   *
+   * TODO Roomsコレクションではメンバー（ユーザー）の一覧はUIDの
+   * 配列でしか保持していないので、UID毎にUsersコレクションから
+   * ヒットしている。あまり効率が良くないので追々考える。
+   *
+   * @param id
+   */
+  static async getRoomMembers(id: string) {
+    const room = await Repository.getRoom(id);
+    const memberUids = room.members;
+
+    const promises = memberUids.map(async uid => {
+      const userDoc = await db.doc(`/users/${uid}`).get();
+      if (!userDoc.exists) throw new Error(`User not found: ${uid}`);
+      const data = userDoc.data();
+      if (!data) throw new Error();
+      return {
+        id: userDoc.id,
+        name: data.name,
+        userPic: data.userPic,
+        defaultRoom: data.defaultRoom
+      };
+    });
+
+    return Promise.all(promises);
+  }
+
   static async getRooms(userId: string) {
     const roomsRef = await db
       .collection(`/rooms`)

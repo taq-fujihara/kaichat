@@ -18,7 +18,8 @@ export default new Vuex.Store({
       userPic: "",
       defaultRoom: ""
     },
-    messages: new Array<ChatMessage>()
+    messages: new Array<ChatMessage>(),
+    members: new Array<User>()
   },
   mutations: {
     setUser(state, { id, name, userPic, defaultRoom }) {
@@ -55,6 +56,9 @@ export default new Vuex.Store({
 
         state.messages = messages;
       });
+    },
+    async loadMembers({ state }, roomId: string) {
+      state.members = await Repository.getRoomMembers(roomId);
     }
   },
   modules: {}

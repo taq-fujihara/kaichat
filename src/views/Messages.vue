@@ -13,7 +13,7 @@
       />
     </div>
 
-    <!-- <div class="header">
+    <div class="header">
       <div class="header-contents-right">
         <i
           class="fas fa-arrow-left clickable"
@@ -21,9 +21,17 @@
         ></i>
       </div>
       <div class="header-contents-left">
-        <i class="fas fa-cog clickable" @click="$router.push('/rooms')"></i>
+        <div class="avatars">
+          <div class="avatars__shadow"></div>
+          <Avatar
+            v-for="user in $store.state.members"
+            :key="user.id"
+            :photo-url="user.userPic"
+            :is-small="true"
+          />
+        </div>
       </div>
-    </div> -->
+    </div>
 
     <div class="footer-wrapper">
       <div class="footer">
@@ -49,6 +57,7 @@
 </template>
 
 <script>
+import Avatar from "@/components/Avatar.vue";
 import ChatMessage from "@/components/ChatMessage.vue";
 import ChatMessageMine from "@/components/ChatMessageMine.vue";
 import Repository from "@/repository";
@@ -63,7 +72,8 @@ export default {
   name: "Messages",
   components: {
     ChatMessage,
-    ChatMessageMine
+    ChatMessageMine,
+    Avatar
   },
   props: {
     roomId: {
@@ -120,11 +130,14 @@ export default {
   },
   async mounted() {
     await this.$store.dispatch("loadMessages", this.roomId);
+    await this.$store.dispatch("loadMembers", this.roomId);
   }
 };
 </script>
 
 <style lang="scss" scoped>
+$bg-color: #000304;
+
 .header {
   position: fixed;
   top: 0;
@@ -134,12 +147,39 @@ export default {
 
   display: flex;
 
-  background-color: #000304;
   color: #fff;
   opacity: 0.9;
 
   .header-contents-right {
     flex: 1;
+  }
+
+  .header-contents-left {
+    display: flex;
+  }
+}
+
+.avatars {
+  position: relative;
+  display: flex;
+
+  &__shadow {
+    position: absolute;
+    top: 10%;
+    bottom: -10px;
+    left: -10px;
+    right: 5px;
+    clip-path: polygon(
+      45% 45%,
+      50% 75%,
+      100% 0,
+      100% 80%,
+      35% 100%,
+      35% 83%,
+      0 100%
+    );
+
+    background-color: $bg-color;
   }
 }
 
@@ -162,7 +202,7 @@ export default {
   display: flex;
   justify-content: center;
 
-  background-color: #000304;
+  background-color: $bg-color;
   opacity: 0.9;
 }
 
@@ -187,7 +227,7 @@ export default {
       margin-right: 16px;
 
       line-height: 25px;
-      background-color: #000304;
+      background-color: $bg-color;
       color: #fff;
       border: none;
       outline: none;
