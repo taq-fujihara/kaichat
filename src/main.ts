@@ -7,7 +7,10 @@ import router from "./router";
 import store from "./store";
 import Repository from "./repository";
 
-import "@/assets/normalize.css";
+import "./assets/normalize.css";
+import "./assets/variables.scss";
+import "./assets/styles.scss";
+
 import { User } from "./models/User";
 
 Vue.config.productionTip = false;

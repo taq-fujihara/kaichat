@@ -154,6 +154,7 @@ export default {
 
 <style lang="scss" scoped>
 $bg-color: #000304;
+$footer-height: 60px;
 
 .header {
   position: fixed;
@@ -225,7 +226,7 @@ $bg-color: #000304;
 
 .footer {
   width: 400px;
-  height: 60px;
+  height: $footer-height;
 
   display: flex;
   align-items: center;
@@ -240,8 +241,8 @@ $bg-color: #000304;
       width: 100%;
       height: 25px;
 
-      margin-left: 16px;
-      margin-right: 16px;
+      margin-left: var(--spacing-medium);
+      margin-right: var(--spacing-medium);
 
       line-height: 25px;
       background-color: $bg-color;
