@@ -1,6 +1,7 @@
 import { initializeApp, firestore } from "firebase/app";
 import "firebase/firestore";
 import "firebase/auth";
+import "firebase/messaging";
 
 const app = initializeApp({
   apiKey: process.env.VUE_APP_API_KEY,
@@ -14,8 +15,8 @@ const app = initializeApp({
   measurementId: process.env.VUE_APP_MEASUREMENT_ID
 });
 
+// Firestore
 const f = app.firestore();
-
 if (process.env.VUE_APP_FIRESTORE_EMULATOR_HOST) {
   f.settings({
     host: process.env.VUE_APP_FIRESTORE_EMULATOR_HOST,
@@ -26,3 +27,4 @@ if (process.env.VUE_APP_FIRESTORE_EMULATOR_HOST) {
 export const auth = app.auth();
 export const db = f;
 export const serverTimestamp = firestore.FieldValue.serverTimestamp;
+export const messaging = app.messaging();

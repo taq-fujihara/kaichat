@@ -195,4 +195,15 @@ export default class Repository {
       throw new Error(`Failed to add message: ${error}`);
     }
   }
+
+  static async setToken(userId: string, token: string): Promise<void> {
+    try {
+      await db.doc(`/fcmTokens/${userId}`).set({
+        token,
+        createdAt: serverTimestamp()
+      });
+    } catch (error) {
+      throw new Error(`Failed to save token: ${error}`);
+    }
+  }
 }
