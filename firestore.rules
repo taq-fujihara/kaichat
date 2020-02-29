@@ -8,6 +8,7 @@ service cloud.firestore {
       // ログインしている限り取得できる（ただしリストはできない）。
       // TODO ユーザー情報が増えてきたら制限を考える。
     	allow get: if request.auth.uid != null;
+      allow write: if request.auth.uid == userId
     }
 
     match /rooms/{roomId} {
