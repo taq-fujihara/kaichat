@@ -1,68 +1,45 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import { request } from "https";
 
 admin.initializeApp();
 const db = admin.firestore();
 
-const FCM_HOST = "fcm.googleapis.com";
-const FCM_PATH = "/fcm/send";
-const FCM_KEY = functions.config().fcm.key;
-
-const NOTIFICATION_TITLE = "新着メッセージ";
-
-async function getUserPhotoURL(id: string) {
+async function getUser(id: string) {
   const userDoc = await db.doc(`/users/${id}`).get();
   if (!userDoc.exists) {
     throw new Error(`User not found: ${id}`);
   }
-  return userDoc.data()?.userPic;
+
+  const userData = userDoc.data();
+
+  return {
+    id: userDoc.id,
+    userPic: userData?.userPic,
+    name: userData?.name
+  };
 }
 
-function send(
-  to: string,
+async function send(
+  recipientTokens: string[],
   message: string,
-  senderPhotoURL: string
+  senderName: string,
+  senderPhotoURL: string,
+  roomId: string
 ): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const r = request(
-      {
-        host: FCM_HOST,
-        path: FCM_PATH,
-        method: "POST",
-        headers: {
-          Authorization: `key=${FCM_KEY}`,
-          "Content-Type": "application/json"
-        }
+  await admin.messaging().sendMulticast({
+    tokens: recipientTokens.filter(t => !!t),
+    notification: {
+      title: `${senderName}さんからメッセージが届きました`,
+      body: message
+    },
+    webpush: {
+      notification: {
+        icon: senderPhotoURL
       },
-      res => {
-        if (res.statusCode === 200) {
-          resolve();
-        } else {
-          console.log("ERRRR!", res.statusCode);
-          reject();
-        }
+      fcmOptions: {
+        link: `/rooms/${roomId}/messages`
       }
-    );
-
-    r.on("error", error => {
-      console.log("ERR!", error);
-      reject();
-    });
-
-    r.write(
-      JSON.stringify({
-        to,
-        // data: {
-        notification: {
-          title: NOTIFICATION_TITLE,
-          body: message,
-          icon: senderPhotoURL
-        }
-      })
-    );
-
-    r.end();
+    }
   });
 }
 
@@ -71,8 +48,8 @@ export const sendNotification = functions.firestore
   .onCreate(async (snapshot, context) => {
     const data = snapshot.data();
     const senderId = data?.userId;
-    const senderPhotoURL = await getUserPhotoURL(senderId);
     const message = data?.text;
+    const user = await getUser(senderId);
 
     const roomId = context.params.roomId;
     const roomDoc = await db.doc(`/rooms/${roomId}`).get();
@@ -88,5 +65,5 @@ export const sendNotification = functions.firestore
       })
     );
 
-    await Promise.all(notifyTo.map(to => send(to, message, senderPhotoURL)));
+    await send(notifyTo, message, user.name, user.userPic, roomId);
   });
