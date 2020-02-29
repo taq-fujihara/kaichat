@@ -23,5 +23,9 @@ service cloud.firestore {
                          request.auth.uid in get(/databases/$(database)/documents/rooms/$(roomId)).data.members;
       }
     }
+
+    match /fcmTokens/{userId} {
+      allow create, update: if request.auth.uid == userId;
+    }
   }
 }
