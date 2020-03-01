@@ -139,8 +139,22 @@ export default {
     this.$store.commit('clearMessages')
   },
   async mounted() {
-    await this.$store.dispatch('loadMessages', this.roomId)
-    await this.$store.dispatch('loadMembers', this.roomId)
+    try {
+      await this.$store.dispatch('loadMessages', this.roomId)
+    } catch (error) {
+      alert('メッセージが取得できませんでした！部屋一覧に戻ります。')
+      this.$router.push('/rooms')
+      return
+    }
+
+    try {
+      await this.$store.dispatch('loadMembers', this.roomId)
+    } catch (error) {
+      alert('メンバーがロードできませんでした！部屋一覧に戻ります。')
+      this.$router.push('/rooms')
+      return
+    }
+
     await Repository.saveUsersLastRoom(this.$store.state.user.id, this.roomId)
   },
   beforeDestroy() {

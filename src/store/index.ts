@@ -40,7 +40,8 @@ export default new Vuex.Store({
       if (unsubscribeMessages) {
         unsubscribeMessages()
       }
-      Repository.onMessagesChange(roomId, messages => {
+
+      unsubscribeMessages = Repository.onMessagesChange(roomId, messages => {
         messages.reverse()
 
         // ガイド線のためのメタデータ補完

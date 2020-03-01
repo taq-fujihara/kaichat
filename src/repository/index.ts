@@ -168,7 +168,7 @@ export default class Repository {
 
   static onMessagesChange(
     roomId: string,
-    callback: (messages: Array<ChatMessage>) => void,
+    onNext: (messages: Array<ChatMessage>) => void,
   ): () => void {
     return db
       .collection(`/rooms/${roomId}/messages`)
@@ -179,19 +179,15 @@ export default class Repository {
         snapshot.forEach(doc => {
           messages.push(docToChatMessageModel(doc))
         })
-        callback(messages)
+        onNext(messages)
       })
   }
 
   static async addMessage(roomId: string, message: ChatMessage): Promise<void> {
-    try {
-      await db.collection(`/rooms/${roomId}/messages`).add({
-        ...message,
-        createdAt: serverTimestamp(),
-      })
-    } catch (error) {
-      throw new Error(`Failed to add message: ${error}`)
-    }
+    await db.collection(`/rooms/${roomId}/messages`).add({
+      ...message,
+      createdAt: serverTimestamp(),
+    })
   }
 
   static async setToken(userId: string, token: string): Promise<void> {

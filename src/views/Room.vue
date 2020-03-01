@@ -40,10 +40,15 @@ export default {
     }
   },
   async mounted() {
-    const room = await Repository.getRoom(this.roomId)
-    this.room.name = room.name
-    this.room.members = room.members
-    this.room.createdAt = room.createdAt.toString()
+    try {
+      const room = await Repository.getRoom(this.roomId)
+      this.room.name = room.name
+      this.room.members = room.members
+      this.room.createdAt = room.createdAt.toString()
+    } catch (error) {
+      alert('部屋が取得できませんでした！部屋一覧に戻ります。')
+      this.$router.push('/rooms')
+    }
   },
 }
 </script>
