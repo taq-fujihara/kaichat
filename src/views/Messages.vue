@@ -8,7 +8,7 @@
         :is-next-me="message.nextUserId === $store.state.user.id"
         :key="message.id"
         :text="message.text"
-        :photoUrl="message.photoUrl"
+        :photoUrl="findPhotoUrl(message.userId)"
         :is-last="!message.nextUserId"
       />
     </div>
@@ -112,6 +112,9 @@ export default {
       } else {
         return ChatMessage
       }
+    },
+    findPhotoUrl(userId) {
+      return this.$store.state.members.find(m => m.id === userId).photoUrl
     },
     async publishMessage() {
       if (!this.message) {

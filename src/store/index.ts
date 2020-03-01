@@ -44,7 +44,7 @@ export default new Vuex.Store({
       unsubscribeMessages = Repository.onMessagesChange(roomId, messages => {
         messages.reverse()
 
-        // ガイド線のためのメタデータ補完
+        // メタデータ補完
         messages.forEach((m, i, arr) => {
           const nextIndex = i + 1
           if (arr.length > nextIndex) {
