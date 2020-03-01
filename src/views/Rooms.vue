@@ -50,73 +50,73 @@
 </template>
 
 <script>
-import Repository from "@/repository";
-import ChatMessage from "@/components/ChatMessage.vue";
-import ChatMessageMine from "@/components/ChatMessageMine.vue";
+import Repository from '@/repository'
+import ChatMessage from '@/components/ChatMessage.vue'
+import ChatMessageMine from '@/components/ChatMessageMine.vue'
 
 export default {
-  name: "Rooms",
+  name: 'Rooms',
   components: {
     ChatMessage,
-    ChatMessageMine
+    ChatMessageMine,
   },
   data() {
     return {
       rooms: [],
       newRoomDialogOpen: false,
-      newMember: "",
+      newMember: '',
       newRoom: {
-        name: "",
-        members: [this.$store.state.user.id]
+        name: '',
+        members: [this.$store.state.user.id],
       },
-      creatingRoom: false
-    };
+      creatingRoom: false,
+    }
   },
   computed: {
     chooseRoomText() {
-      const index = Math.floor(Math.random() * 100) % 2;
-      return ["部屋を選べ！", "どの部屋にするのですか？"][index];
+      const index = Math.floor(Math.random() * 100) % 2
+      return ['部屋を選べ！', 'どの部屋にするのですか？'][index]
     },
     isNewRoomValid() {
-      return !!this.newRoom.name && this.newRoom.members.length > 0;
-    }
+      return !!this.newRoom.name && this.newRoom.members.length > 0
+    },
   },
   methods: {
     viewMessages(room) {
       this.$router.push({
-        name: "Messages",
-        params: { roomId: room.id }
-      });
+        name: 'Messages',
+        params: { roomId: room.id },
+      })
     },
     addMember() {
       if (!this.newMember) {
-        return;
+        return
       }
       if (this.newRoom.members.includes(this.newMember)) {
-        return;
+        return
       }
-      this.newRoom.members = [...this.newRoom.members, this.newMember];
-      this.newMember = "";
+      this.newRoom.members = [...this.newRoom.members, this.newMember]
+      this.newMember = ''
     },
     async createRoom() {
-      this.creatingRoom = true;
+      this.creatingRoom = true
       try {
         await Repository.createRoom(
           this.$store.state.user.id,
           this.newRoom.name,
-          this.newRoom.members
-        );
+          this.newRoom.members,
+        )
       } catch (error) {
-        this.creatingRoom = false;
-        throw new Error(error);
+        this.creatingRoom = false
+        throw new Error(error)
       }
-      location.reload();
-    }
+      location.reload()
+    },
   },
   async mounted() {
-    this.rooms = await Repository.getRooms(this.$store.state.user.id);
-  }
-};
+    this.rooms = await Repository.getRooms(this.$store.state.user.id)
+  },
+}
 </script>
 
 <style lang="scss" scoped>

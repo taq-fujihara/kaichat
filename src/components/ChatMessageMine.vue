@@ -24,20 +24,20 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from "vue-property-decorator";
+import { Component, Prop, Vue } from 'vue-property-decorator'
 
 @Component
 export default class ChatMessageMine extends Vue {
-  @Prop() private text!: string;
-  @Prop() private even!: boolean;
-  @Prop() private isNextMe!: boolean;
-  @Prop() private isLast!: boolean;
+  @Prop() private text!: string
+  @Prop() private even!: boolean
+  @Prop() private isNextMe!: boolean
+  @Prop() private isLast!: boolean
 
   private get displayText(): Array<string> {
     if (!this.text) {
-      return [];
+      return []
     }
-    return this.text.split("\n");
+    return this.text.split('\n')
   }
 }
 </script>

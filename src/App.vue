@@ -5,14 +5,14 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Vue } from 'vue-property-decorator'
 
 @Component
 export default class App extends Vue {}
 </script>
 
 <style lang="scss">
-@import url("https://fonts.googleapis.com/css?family=Nunito:400,700");
+@import url('https://fonts.googleapis.com/css?family=Nunito:400,700');
 
 // Set your brand colors
 // $purple: #8a4d76;
@@ -36,9 +36,9 @@ $primary: #cc0001;
 // $input-shadow: none;
 
 // @import "bulma/bulma.sass";
-@import "bulma/sass/utilities/_all.sass";
-@import "bulma/sass/elements/button.sass";
-@import "bulma/sass/elements/icon.sass";
+@import 'bulma/sass/utilities/_all.sass';
+@import 'bulma/sass/elements/button.sass';
+@import 'bulma/sass/elements/icon.sass';
 
 html,
 body {
@@ -49,7 +49,7 @@ body {
 
 #app {
   // font-family: Avenir, Helvetica, Arial, sans-serif;
-  font-family: "M PLUS 1p";
+  font-family: 'M PLUS 1p';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   // text-align: center;

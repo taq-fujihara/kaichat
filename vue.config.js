@@ -1,7 +1,7 @@
-require("./scripts/prebuild");
+require('./scripts/prebuild')
 
 module.exports = {
   pwa: {
-    themeColor: "#000304"
-  }
-};
+    themeColor: '#000304',
+  },
+}

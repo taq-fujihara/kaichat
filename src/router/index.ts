@@ -1,70 +1,70 @@
-import Vue from "vue";
-import VueRouter from "vue-router";
-import Rooms from "../views/Rooms.vue";
-import Room from "../views/Room.vue";
-import Messages from "../views/Messages.vue";
-import store from "@/store";
+import Vue from 'vue'
+import VueRouter from 'vue-router'
+import Rooms from '../views/Rooms.vue'
+import Room from '../views/Room.vue'
+import Messages from '../views/Messages.vue'
+import store from '@/store'
 
-Vue.use(VueRouter);
+Vue.use(VueRouter)
 
 const routes = [
   {
-    path: "/",
-    name: "Home"
+    path: '/',
+    name: 'Home',
   },
   {
-    path: "/rooms",
-    name: "Rooms",
-    component: Rooms
+    path: '/rooms',
+    name: 'Rooms',
+    component: Rooms,
   },
   {
-    path: "/rooms/:roomId",
-    name: "Room",
+    path: '/rooms/:roomId',
+    name: 'Room',
     component: Room,
-    props: true
+    props: true,
   },
   {
-    path: "/rooms/:roomId/messages",
-    name: "Messages",
+    path: '/rooms/:roomId/messages',
+    name: 'Messages',
     component: Messages,
-    props: true
+    props: true,
   },
   {
-    path: "/about",
-    name: "About",
+    path: '/about',
+    name: 'About',
     // route level code-splitting
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
     component: () =>
-      import(/* webpackChunkName: "about" */ "../views/About.vue")
-  }
-];
+      import(/* webpackChunkName: "about" */ '../views/About.vue'),
+  },
+]
 
 const router = new VueRouter({
-  mode: "history",
+  mode: 'history',
   base: process.env.BASE_URL,
-  routes
-});
+  routes,
+})
 
 router.beforeEach((to, from, next) => {
-  if (to.name === "Home") {
+  if (to.name === 'Home') {
     if (store.state.user.defaultRoom) {
       next({
-        name: "Messages",
+        name: 'Messages',
         params: {
-          roomId: store.state.user.defaultRoom
-        }
-      });
+          roomId: store.state.user.defaultRoom,
+        },
+      })
     } else {
       next({
-        name: "Rooms"
-      });
+        name: 'Rooms',
+      })
     }
 
-    return;
+    return
   }
 
-  next();
-});
+  next()
+})
 
-export default router;
+export default router

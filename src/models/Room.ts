@@ -1,6 +1,6 @@
 export type Room = {
-  id: string;
-  name: string;
-  members: Array<string>;
-  createdAt: Date;
-};
+  id: string
+  name: string
+  members: Array<string>
+  createdAt: Date
+}

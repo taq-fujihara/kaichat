@@ -1,80 +1,80 @@
-import Vue from "vue";
-import Vuex from "vuex";
-import Repository from "@/repository";
-import ChatMessage from "@/models/ChatMessage";
-import { User } from "@/models/User";
+import Vue from 'vue'
+import Vuex from 'vuex'
+import Repository from '@/repository'
+import ChatMessage from '@/models/ChatMessage'
+import { User } from '@/models/User'
 
-Vue.use(Vuex);
+Vue.use(Vuex)
 
-let unsubscribeMessages: () => void;
+let unsubscribeMessages: () => void
 
 export default new Vuex.Store({
   state: {
     // TODO dummy user
     // ユーザーの画像は各メッセージに入れずに、ユーザーIDから取ろう
     user: {
-      id: "",
-      name: "",
-      userPic: "",
-      defaultRoom: ""
+      id: '',
+      name: '',
+      userPic: '',
+      defaultRoom: '',
     },
     messages: new Array<ChatMessage>(),
-    members: new Array<User>()
+    members: new Array<User>(),
   },
   mutations: {
     setUser(state, { id, name, userPic, defaultRoom }) {
-      state.user.id = id;
-      state.user.name = name;
-      state.user.userPic = userPic;
-      state.user.defaultRoom = defaultRoom;
+      state.user.id = id
+      state.user.name = name
+      state.user.userPic = userPic
+      state.user.defaultRoom = defaultRoom
     },
     addMessages(state, messages: Array<ChatMessage>) {
-      state.messages = [...state.messages, ...messages];
+      state.messages = [...state.messages, ...messages]
     },
     clearMessages(state) {
-      state.messages = [];
-    }
+      state.messages = []
+    },
   },
   actions: {
     async loadMessages({ state }, roomId: string) {
       if (unsubscribeMessages) {
-        unsubscribeMessages();
+        unsubscribeMessages()
       }
       Repository.onMessagesChange(roomId, messages => {
-        messages.reverse();
+        messages.reverse()
 
         // ガイド線のためのメタデータ補完
         messages.forEach((m, i, arr) => {
-          const nextIndex = i + 1;
+          const nextIndex = i + 1
           if (arr.length > nextIndex) {
-            const next = arr[nextIndex];
-            m.nextUserId = next.userId;
+            const next = arr[nextIndex]
+            m.nextUserId = next.userId
           } else {
-            m.isLast = true;
+            m.isLast = true
           }
-        });
+        })
 
-        state.messages = messages;
-      });
+        state.messages = messages
+      })
     },
     async loadMembers({ state }, roomId: string) {
-      const users = await Repository.getRoomMembers(roomId);
+      const users = await Repository.getRoomMembers(roomId)
       // 自分を最後に
-      const me = users.find(u => u.id === state.user.id);
-      const usersButMe = users.filter(u => u.id !== state.user.id);
-      usersButMe.sort();
+      const me = users.find(u => u.id === state.user.id)
+      const usersButMe = users.filter(u => u.id !== state.user.id)
+      usersButMe.sort()
 
       if (!me) {
-        throw new Error();
+        throw new Error()
       }
 
-      state.members = [...usersButMe, me];
+      state.members = [...usersButMe, me]
     },
     unsubscribeMessages() {
       if (unsubscribeMessages) {
-        unsubscribeMessages();
+        unsubscribeMessages()
       }
-    }
+    },
   },
-  modules: {}
-});
+  modules: {},
+})

@@ -25,21 +25,21 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from "vue-property-decorator";
-import Avatar from "@/components/Avatar.vue";
+import { Component, Prop, Vue } from 'vue-property-decorator'
+import Avatar from '@/components/Avatar.vue'
 
 @Component({
-  components: { Avatar }
+  components: { Avatar },
 })
 export default class ChatMessage extends Vue {
-  @Prop() private text!: string;
-  @Prop() private userPic!: string;
-  @Prop() private even!: boolean;
-  @Prop() private isNextMe!: boolean;
-  @Prop() private isLast!: boolean;
+  @Prop() private text!: string
+  @Prop() private userPic!: string
+  @Prop() private even!: boolean
+  @Prop() private isNextMe!: boolean
+  @Prop() private isLast!: boolean
 
   private get displayText(): Array<string> {
-    return this.text.split("\n");
+    return this.text.split('\n')
   }
 }
 </script>

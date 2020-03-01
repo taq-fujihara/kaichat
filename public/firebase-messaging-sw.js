@@ -9,8 +9,8 @@ importScripts("https://www.gstatic.com/firebasejs/5.5.6/firebase-messaging.js");
 // Initialize the Firebase app in the service worker by passing in the messagingSenderId.
 // eslint-disable-next-line
 firebase.initializeApp({
-  messagingSenderId: "{{VUE_APP_MESSAGING_SENDER_ID}}"
-});
+  messagingSenderId: '{{VUE_APP_MESSAGING_SENDER_ID}}',
+})
 
 // Retrieve an instance of Firebase Messaging so that it can handle background messages.
 // eslint-disable-next-line

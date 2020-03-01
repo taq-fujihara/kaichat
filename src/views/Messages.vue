@@ -58,98 +58,95 @@
 </template>
 
 <script>
-import Avatar from "@/components/Avatar.vue";
-import ChatMessage from "@/components/ChatMessage.vue";
-import ChatMessageMine from "@/components/ChatMessageMine.vue";
-import Repository from "@/repository";
+import Avatar from '@/components/Avatar.vue'
+import ChatMessage from '@/components/ChatMessage.vue'
+import ChatMessageMine from '@/components/ChatMessageMine.vue'
+import Repository from '@/repository'
 
 function scrollToBottom() {
-  const elem = document.documentElement;
-  const bottom = elem.scrollHeight - elem.clientHeight;
-  window.scroll(0, bottom);
+  const elem = document.documentElement
+  const bottom = elem.scrollHeight - elem.clientHeight
+  window.scroll(0, bottom)
 }
 
 export default {
-  name: "Messages",
+  name: 'Messages',
   components: {
     ChatMessage,
     ChatMessageMine,
-    Avatar
+    Avatar,
   },
   props: {
     roomId: {
       type: String,
-      required: true
-    }
+      required: true,
+    },
   },
   data() {
     return {
-      message: "",
-      sendingMessage: false
-    };
+      message: '',
+      sendingMessage: false,
+    }
   },
   computed: {
     messages() {
-      return this.$store.state.messages;
-    }
+      return this.$store.state.messages
+    },
   },
   watch: {
     async messages() {
-      await this.$nextTick();
-      scrollToBottom();
-    }
+      await this.$nextTick()
+      scrollToBottom()
+    },
   },
   methods: {
     getMessageComponent(userId) {
       if (userId === this.$store.state.user.id) {
-        return ChatMessageMine;
+        return ChatMessageMine
       } else {
-        return ChatMessage;
+        return ChatMessage
       }
     },
     async publishMessage() {
       if (!this.message) {
-        return;
+        return
       }
 
-      this.sendingMessage = true;
+      this.sendingMessage = true
 
       try {
         await Repository.addMessage(this.roomId, {
           id: new Date().getTime().toString(),
           text: this.message,
           userId: this.$store.state.user.id,
-          userPic: this.$store.state.user.userPic
-        });
+          userPic: this.$store.state.user.userPic,
+        })
       } catch (error) {
-        this.sendingMessage = false;
-        throw new Error(error);
+        this.sendingMessage = false
+        throw new Error(error)
       }
 
-      this.message = "";
-      this.sendingMessage = false;
+      this.message = ''
+      this.sendingMessage = false
     },
     keyEnter(e) {
       if (e.shiftKey) {
-        this.publishMessage();
+        this.publishMessage()
       }
-    }
+    },
   },
   created() {
-    this.$store.commit("clearMessages");
+    this.$store.commit('clearMessages')
   },
   async mounted() {
-    await this.$store.dispatch("loadMessages", this.roomId);
-    await this.$store.dispatch("loadMembers", this.roomId);
-    await Repository.setUsersDefaultRoom(
-      this.$store.state.user.id,
-      this.roomId
-    );
+    await this.$store.dispatch('loadMessages', this.roomId)
+    await this.$store.dispatch('loadMembers', this.roomId)
+    await Repository.setUsersDefaultRoom(this.$store.state.user.id, this.roomId)
   },
   beforeDestroy() {
-    this.$store.dispatch("unsubscribeMessages");
-  }
-};
+    this.$store.dispatch('unsubscribeMessages')
+  },
+}
 </script>
 
 <style lang="scss" scoped>

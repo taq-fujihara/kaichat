@@ -8,13 +8,13 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from "vue-property-decorator";
+import { Component, Prop, Vue } from 'vue-property-decorator'
 
 @Component
 export default class Avatar extends Vue {
-  @Prop() private photoUrl!: string;
-  @Prop() private userName!: string;
-  @Prop({ default: false }) private isSmall!: boolean;
+  @Prop() private photoUrl!: string
+  @Prop() private userName!: string
+  @Prop({ default: false }) private isSmall!: boolean
 }
 </script>
 

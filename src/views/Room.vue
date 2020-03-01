@@ -20,32 +20,32 @@
 </template>
 
 <script>
-import Repository from "@/repository";
+import Repository from '@/repository'
 
 export default {
-  name: "Room",
+  name: 'Room',
   props: {
     roomId: {
       type: String,
-      required: true
-    }
+      required: true,
+    },
   },
   data() {
     return {
       room: {
-        name: "",
+        name: '',
         members: [],
-        createdAt: ""
-      }
-    };
+        createdAt: '',
+      },
+    }
   },
   async mounted() {
-    const room = await Repository.getRoom(this.roomId);
-    this.room.name = room.name;
-    this.room.members = room.members;
-    this.room.createdAt = room.createdAt.toString();
-  }
-};
+    const room = await Repository.getRoom(this.roomId)
+    this.room.name = room.name
+    this.room.members = room.members
+    this.room.createdAt = room.createdAt.toString()
+  },
+}
 </script>
 
 <style lang="scss" scoped>
