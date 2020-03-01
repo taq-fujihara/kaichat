@@ -44,7 +44,7 @@ async function send(
 }
 
 export const sendNotification = functions.firestore
-  .document('rooms/{roomId}/messages/{messageId}')
+  .document('/rooms/{roomId}/messages/{messageId}')
   .onCreate(async (snapshot, context) => {
     const data = snapshot.data()
     const senderId = data?.userId
