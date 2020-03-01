@@ -121,12 +121,11 @@ export default {
       this.sendingMessage = true
 
       try {
-        await Repository.addMessage(this.roomId, {
-          id: new Date().getTime().toString(),
-          text: this.message,
-          userId: this.$store.state.user.id,
-          photoUrl: this.$store.state.user.photoUrl,
-        })
+        await Repository.addMessage(
+          this.roomId,
+          this.$store.state.user.id,
+          this.message,
+        )
       } catch (error) {
         this.sendingMessage = false
         throw new Error(error)

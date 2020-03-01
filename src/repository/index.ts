@@ -198,9 +198,14 @@ export default class Repository {
       })
   }
 
-  static async addMessage(roomId: string, message: ChatMessage): Promise<void> {
+  static async addMessage(
+    roomId: string,
+    userId: string,
+    text: string,
+  ): Promise<void> {
     await db.collection(`/rooms/${roomId}/messages`).add({
-      ...message,
+      userId,
+      text,
       createdAt: serverTimestamp(),
     })
   }
