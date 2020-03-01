@@ -52,7 +52,7 @@ function docToChatMessageModel(docRef: DocumentSnapshot): ChatMessage {
  * バックエンドデータ管理
  */
 export default class Repository {
-  static async createUser(user: User) {
+  static async getUser(user: User) {
     let userDoc = await db.doc(`/users/${user.id}`).get()
 
     if (!userDoc.exists) {

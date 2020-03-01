@@ -11,8 +11,6 @@ import './assets/normalize.css'
 import './assets/variables.scss'
 import './assets/styles.scss'
 
-import { User } from './models/User'
-
 Vue.config.productionTip = false
 
 function renderApp(component: VueConstructor<Vue>): void {
@@ -37,15 +35,11 @@ function initMessaging(messaging: firebase.messaging.Messaging) {
   })
 }
 
-async function getUserData(user: User) {
-  return await Repository.createUser(user)
-}
-
 auth.onAuthStateChanged(async user => {
   if (!user) {
     auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider())
   } else {
-    const userData = await getUserData({
+    const userDoc = await Repository.getUser({
       id: user.uid,
       name: '',
       photoUrl: user.photoURL,
@@ -54,7 +48,7 @@ auth.onAuthStateChanged(async user => {
 
     initMessaging(messaging)
 
-    store.commit('setUser', userData)
+    store.commit('setUser', userDoc)
 
     renderApp(App)
   }
