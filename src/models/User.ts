@@ -2,5 +2,5 @@ export type User = {
   id: string
   name: string
   photoUrl: string | null
-  defaultRoom: string | null
+  lastRoom: string | null
 }

@@ -43,7 +43,7 @@ auth.onAuthStateChanged(async user => {
       id: user.uid,
       name: '',
       photoUrl: user.photoURL,
-      defaultRoom: null,
+      lastRoom: null,
     })
 
     initMessaging(messaging)

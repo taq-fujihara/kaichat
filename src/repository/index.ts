@@ -59,7 +59,7 @@ export default class Repository {
       await db.doc(`/users/${user.id}`).set({
         name: user.name,
         photoUrl: user.photoUrl,
-        defaultRoom: user.defaultRoom,
+        lastRoom: user.lastRoom,
       })
 
       userDoc = await db.doc(`/users/${user.id}`).get()
@@ -75,21 +75,19 @@ export default class Repository {
       id: userDoc.id,
       name: userData.name,
       photoUrl: userData.photoUrl,
-      defaultRoom: userData.defaultRoom,
+      lastRoom: userData.lastRoom,
     }
   }
 
   /**
-   * ユーザーのデフォルトルームを設定する
-   *
-   * TODO 最後に見た部屋にしようかと思っている、、、
+   * ユーザーが最後に訪れた部屋を保存する
    *
    * @param userId ユーザーID
    * @param roomId 部屋ID
    */
-  static async setUsersDefaultRoom(userId: string, roomId: string) {
+  static async saveUsersLastRoom(userId: string, roomId: string) {
     await db.doc(`/users/${userId}`).update({
-      defaultRoom: roomId,
+      lastRoom: roomId,
     })
   }
 
@@ -145,7 +143,7 @@ export default class Repository {
         id: userDoc.id,
         name: data.name,
         photoUrl: data.photoUrl,
-        defaultRoom: data.defaultRoom,
+        lastRoom: data.lastRoom,
       }
     })
 

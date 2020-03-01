@@ -16,17 +16,17 @@ export default new Vuex.Store({
       id: '',
       name: '',
       photoUrl: '',
-      defaultRoom: '',
+      lastRoom: '',
     },
     messages: new Array<ChatMessage>(),
     members: new Array<User>(),
   },
   mutations: {
-    setUser(state, { id, name, photoUrl, defaultRoom }) {
+    setUser(state, { id, name, photoUrl, lastRoom }) {
       state.user.id = id
       state.user.name = name
       state.user.photoUrl = photoUrl
-      state.user.defaultRoom = defaultRoom
+      state.user.lastRoom = lastRoom
     },
     addMessages(state, messages: Array<ChatMessage>) {
       state.messages = [...state.messages, ...messages]

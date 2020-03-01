@@ -48,11 +48,11 @@ const router = new VueRouter({
 
 router.beforeEach((to, from, next) => {
   if (to.name === 'Home') {
-    if (store.state.user.defaultRoom) {
+    if (store.state.user.lastRoom) {
       next({
         name: 'Messages',
         params: {
-          roomId: store.state.user.defaultRoom,
+          roomId: store.state.user.lastRoom,
         },
       })
     } else {
