@@ -1,7 +1,7 @@
 <template>
   <div class="avatar" :class="{ 'avatar--small': isSmall }">
     <div class="avatar__background"></div>
-    <div class="avatar__image">
+    <div class="avatar__image" :style="{ backgroundColor }">
       <img :src="photoUrl" />
     </div>
   </div>
@@ -14,6 +14,7 @@ import { Component, Prop, Vue } from 'vue-property-decorator'
 export default class Avatar extends Vue {
   @Prop() private photoUrl!: string
   @Prop() private userName!: string
+  @Prop() private backgroundColor!: string
   @Prop({ default: false }) private isSmall!: boolean
 }
 </script>

@@ -41,7 +41,7 @@ auth.onAuthStateChanged(async user => {
   } else {
     const userDoc = await Repository.getUser({
       id: user.uid,
-      name: '',
+      name: user.displayName || '',
       photoUrl: user.photoURL,
       lastRoom: null,
     })

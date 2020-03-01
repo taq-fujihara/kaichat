@@ -27,4 +27,5 @@ if (process.env.VUE_APP_FIRESTORE_EMULATOR_HOST) {
 export const auth = app.auth()
 export const db = f
 export const serverTimestamp = firestore.FieldValue.serverTimestamp
+export const arrayUnion = firestore.FieldValue.arrayUnion
 export const messaging = app.messaging()

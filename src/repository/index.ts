@@ -1,4 +1,4 @@
-import { db, serverTimestamp } from '@/firebaseApp'
+import { db, serverTimestamp, arrayUnion } from '@/firebaseApp'
 import ChatMessage from '@/models/ChatMessage'
 import { Room } from '@/models/Room'
 import { User } from '@/models/User'
@@ -24,6 +24,7 @@ function docToRoomModel(docRef: DocumentSnapshot): Room {
   return {
     id: docRef.id,
     name: data.name,
+    owner: data.owner,
     members: data.members,
     createdAt: data.createdAt,
   }
@@ -116,6 +117,7 @@ export default class Repository {
     return {
       id: roomDoc.id,
       name: data.name,
+      owner: data.owner,
       members: data.members,
       createdAt: data.createdAt,
     }
@@ -136,7 +138,7 @@ export default class Repository {
 
     const promises = memberUids.map(async uid => {
       const userDoc = await db.doc(`/users/${uid}`).get()
-      if (!userDoc.exists) throw new Error(`User not found: ${uid}`)
+      if (!userDoc.exists) return undefined
       const data = userDoc.data()
       if (!data) throw new Error()
       return {
@@ -147,9 +149,15 @@ export default class Repository {
       }
     })
 
-    return Promise.all(promises)
+    const members = await Promise.all(promises)
+    return members.filter(m => m !== undefined) as Array<User>
   }
 
+  /**
+   * 所属する部屋一覧を取得する
+   *
+   * @param userId ユーザーID
+   */
   static async getRooms(userId: string) {
     const roomsRef = await db
       .collection(`/rooms`)
@@ -164,6 +172,13 @@ export default class Repository {
     })
 
     return rooms
+  }
+
+  static async addMember(roomId: string, userId: string) {
+    const room = await db.doc(`/rooms/${roomId}`)
+    room.update({
+      members: arrayUnion(userId),
+    })
   }
 
   static onMessagesChange(

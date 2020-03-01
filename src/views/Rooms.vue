@@ -1,7 +1,11 @@
 <template>
   <div class="wrapper">
     <div class="contents">
-      <ChatMessage :text="chooseRoomText" :is-next-me="true" />
+      <ChatMessage
+        :text="chooseRoomText"
+        avatar-background-color="blue"
+        :is-next-me="true"
+      />
       <ChatMessageMine :is-last="true">
         <div class="rooms">
           <div class="room" v-for="room in rooms" :key="room.id">
@@ -14,7 +18,7 @@
           </div>
           <p>
             <a href="#" @click.prevent="newRoomDialogOpen = true">
-              …新しく作ろうか
+              …新しく作る
             </a>
           </p>
           <div v-if="newRoomDialogOpen">

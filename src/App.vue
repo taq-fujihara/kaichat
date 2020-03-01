@@ -35,10 +35,12 @@ $primary: #cc0001;
 // $input-border-color: transparent;
 // $input-shadow: none;
 
-// @import "bulma/bulma.sass";
+// @import 'bulma/bulma.sass';
 @import 'bulma/sass/utilities/_all.sass';
 @import 'bulma/sass/elements/button.sass';
 @import 'bulma/sass/elements/icon.sass';
+@import 'bulma/sass/elements/tag.sass';
+@import 'bulma/sass/form/_all.sass';
 
 html,
 body {
@@ -48,12 +50,9 @@ body {
 }
 
 #app {
-  // font-family: Avenir, Helvetica, Arial, sans-serif;
   font-family: 'M PLUS 1p';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  // text-align: center;
-  // color: #2c3e50;
 }
 
 // TODO styles.scssとかに移す

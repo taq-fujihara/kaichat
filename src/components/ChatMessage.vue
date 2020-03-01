@@ -3,7 +3,7 @@
     <div v-if="!isLast" class="guide-shadow" :class="{ even, isNextMe }"></div>
     <div v-if="!isLast" class="guide" :class="{ even, isNextMe }"></div>
 
-    <Avatar :photo-url="photoUrl" />
+    <Avatar :photo-url="photoUrl" :background-color="avatarBackgroundColor" />
 
     <div class="chat-message">
       <div class="chat-message__background"></div>
@@ -34,6 +34,7 @@ import Avatar from '@/components/Avatar.vue'
 export default class ChatMessage extends Vue {
   @Prop() private text!: string
   @Prop() private photoUrl!: string
+  @Prop() private avatarBackgroundColor!: string
   @Prop() private even!: boolean
   @Prop() private isNextMe!: boolean
   @Prop() private isLast!: boolean

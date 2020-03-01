@@ -16,7 +16,7 @@
     <div class="header">
       <div class="header-contents-right">
         <i
-          class="fas fa-arrow-left clickable"
+          class="fas fa-arrow-left fa-lg clickable"
           @click="$router.push('/rooms')"
         ></i>
       </div>
@@ -29,6 +29,12 @@
             :photo-url="user.photoUrl"
             :is-small="true"
           />
+        </div>
+        <div>
+          <i
+            class="fas fa-cog clickable fa-lg"
+            @click="$router.push(`/rooms/${roomId}`)"
+          ></i>
         </div>
       </div>
     </div>
@@ -166,6 +172,7 @@ export default {
 <style lang="scss" scoped>
 $bg-color: #000304;
 $footer-height: 60px;
+$contents-width: 390px;
 
 .header {
   position: fixed;
@@ -218,7 +225,9 @@ $footer-height: 60px;
 }
 
 .chat-messages {
-  width: 400px;
+  width: 100%;
+  max-width: $contents-width;
+  padding-top: var(--spacing-large);
   padding-bottom: calc(80px + 24px);
 }
 
@@ -236,7 +245,8 @@ $footer-height: 60px;
 }
 
 .footer {
-  width: 400px;
+  width: 100%;
+  max-width: $contents-width;
   height: $footer-height;
 
   display: flex;
