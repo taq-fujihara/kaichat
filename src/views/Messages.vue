@@ -8,7 +8,7 @@
         :is-next-me="message.nextUserId === $store.state.user.id"
         :key="message.id"
         :text="message.text"
-        :userPic="message.userPic"
+        :photoUrl="message.photoUrl"
         :is-last="!message.nextUserId"
       />
     </div>
@@ -26,7 +26,7 @@
           <Avatar
             v-for="user in $store.state.members"
             :key="user.id"
-            :photo-url="user.userPic"
+            :photo-url="user.photoUrl"
             :is-small="true"
           />
         </div>
@@ -119,7 +119,7 @@ export default {
           id: new Date().getTime().toString(),
           text: this.message,
           userId: this.$store.state.user.id,
-          userPic: this.$store.state.user.userPic,
+          photoUrl: this.$store.state.user.photoUrl,
         })
       } catch (error) {
         this.sendingMessage = false

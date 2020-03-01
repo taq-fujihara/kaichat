@@ -1,6 +1,6 @@
 export type User = {
   id: string
   name: string
-  userPic: string | null
+  photoUrl: string | null
   defaultRoom: string | null
 }

@@ -14,7 +14,7 @@ async function getUser(id: string) {
 
   return {
     id: userDoc.id,
-    userPic: userData?.userPic,
+    photoUrl: userData?.photoUrl,
     name: userData?.name,
   }
 }
@@ -23,7 +23,7 @@ async function send(
   recipientTokens: string[],
   message: string,
   senderName: string,
-  senderPhotoURL: string,
+  senderphotoUrl: string,
   roomId: string,
 ): Promise<void> {
   await admin.messaging().sendMulticast({
@@ -34,7 +34,7 @@ async function send(
     },
     webpush: {
       notification: {
-        icon: senderPhotoURL,
+        icon: senderphotoUrl,
       },
       fcmOptions: {
         link: `/rooms/${roomId}/messages`,
@@ -65,5 +65,5 @@ export const sendNotification = functions.firestore
       }),
     )
 
-    await send(notifyTo, message, user.name, user.userPic, roomId)
+    await send(notifyTo, message, user.name, user.photoUrl, roomId)
   })

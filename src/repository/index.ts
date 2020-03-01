@@ -43,7 +43,7 @@ function docToChatMessageModel(docRef: DocumentSnapshot): ChatMessage {
     text: data.text,
     userId: data.userId,
     nextUserId: undefined,
-    userPic: data.userPic,
+    photoUrl: data.photoUrl,
     createdAt: data.createdAt,
     isLast: false,
   }
@@ -58,7 +58,7 @@ export default class Repository {
     if (!userDoc.exists) {
       await db.doc(`/users/${user.id}`).set({
         name: user.name,
-        userPic: user.userPic,
+        photoUrl: user.photoUrl,
         defaultRoom: user.defaultRoom,
       })
 
@@ -74,7 +74,7 @@ export default class Repository {
     return {
       id: userDoc.id,
       name: userData.name,
-      userPic: userData.userPic,
+      photoUrl: userData.photoUrl,
       defaultRoom: userData.defaultRoom,
     }
   }
@@ -144,7 +144,7 @@ export default class Repository {
       return {
         id: userDoc.id,
         name: data.name,
-        userPic: data.userPic,
+        photoUrl: data.photoUrl,
         defaultRoom: data.defaultRoom,
       }
     })

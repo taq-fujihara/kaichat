@@ -48,7 +48,7 @@ auth.onAuthStateChanged(async user => {
     const userData = await getUserData({
       id: user.uid,
       name: '',
-      userPic: user.photoURL,
+      photoUrl: user.photoURL,
       defaultRoom: null,
     })
 
