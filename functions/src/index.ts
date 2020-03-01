@@ -65,5 +65,7 @@ export const sendNotification = functions.firestore
       }),
     )
 
-    await send(notifyTo, message, user.name, user.photoUrl, roomId)
+    if (notifyTo.length > 0) {
+      await send(notifyTo, message, user.name, user.photoUrl, roomId)
+    }
   })
