@@ -1,7 +1,7 @@
 <template>
-  <div class="chat-message-wrapper chat-message-wrapper">
-    <div class="guide-shadow" :class="{ even, isNextMe }"></div>
-    <div class="guide" :class="{ even, isNextMe }"></div>
+  <div class="chat-message-wrapper" :class="{ 'is-next-me': isNextMe }">
+    <div class="guide-shadow"></div>
+    <div class="guide"></div>
 
     <div class="chat-message chat-message">
       <div class="chat-message__background chat-message__background"></div>
@@ -52,6 +52,57 @@ export default class ChatMessageMine extends Vue {
   margin-left: 64px;
 
   justify-content: flex-end;
+
+  margin-left: 16px;
+
+  &:nth-child(odd) {
+    margin-left: 16px;
+
+    &.is-next-me {
+      .guide,
+      .guide-shadow {
+        clip-path: polygon(23% 0, 100% 0, 65% 99%, 0 100%);
+      }
+    }
+  }
+
+  .guide,
+  .guide-shadow {
+    position: absolute;
+    background-color: var(--color-app-black);
+  }
+  .guide-shadow {
+    opacity: 0.4;
+  }
+
+  &.is-next-me {
+    .guide,
+    .guide-shadow {
+      top: 20px;
+      bottom: -60px;
+      right: 50px;
+      width: 32px;
+      clip-path: polygon(0 0, 82% 0, 100% 100%, 38% 100%);
+    }
+    .guide-shadow {
+      transform: translateX(var(--spacing-small));
+    }
+  }
+
+  &:not(.is-next-me) {
+    .guide,
+    .guide-shadow {
+      top: calc(100% - 30px);
+      bottom: -60px;
+      left: 0px;
+      right: 20px;
+      clip-path: polygon(100% 0, 100% 24px, 0 100%, 0 calc(100% - 16px));
+    }
+
+    .guide-shadow {
+      transform: translateY(var(--spacing-small));
+    }
+  }
 
   &:last-child {
     .guide,
@@ -131,41 +182,41 @@ export default class ChatMessageMine extends Vue {
   }
 }
 
-.guide,
-.guide-shadow {
-  position: absolute;
-  background-color: var(--color-app-black);
+// .guide,
+// .guide-shadow {
+//   position: absolute;
+//   background-color: var(--color-app-black);
 
-  // 基本（自分の投稿から相手の投稿へ）
-  top: 20px;
-  bottom: -60px;
-  left: -20px;
-  right: 30px;
-  clip-path: polygon(100% 0, 100% 24px, 0 100%, 0 calc(100% - 16px));
+//   // 基本（自分の投稿から相手の投稿へ）
+//   top: 20px;
+//   bottom: -60px;
+//   left: -20px;
+//   right: 30px;
+//   clip-path: polygon(100% 0, 100% 24px, 0 100%, 0 calc(100% - 16px));
 
-  // そのまま自分の投稿に
-  &.isNextMe {
-    left: auto;
-    right: 50px;
-    width: 32px;
-    clip-path: polygon(0 0, 82% 0, 100% 100%, 38% 100%);
+//   // そのまま自分の投稿に
+//   &.isNextMe {
+//     left: auto;
+//     right: 50px;
+//     width: 32px;
+//     clip-path: polygon(0 0, 82% 0, 100% 100%, 38% 100%);
 
-    // ジグザグに
-    &.even {
-      clip-path: polygon(23% 0, 100% 0, 65% 99%, 0 100%);
-    }
-  }
-}
+//     // ジグザグに
+//     &.even {
+//       clip-path: polygon(23% 0, 100% 0, 65% 99%, 0 100%);
+//     }
+//   }
+// }
 
-.guide-shadow {
-  opacity: 0.4;
+// .guide-shadow {
+//   opacity: 0.4;
 
-  // 基本
-  transform: translateY(var(--spacing-small));
+//   // 基本
+//   transform: translateY(var(--spacing-small));
 
-  // そのまま自分の投稿に
-  &.isNextMe {
-    transform: translateX(var(--spacing-small));
-  }
-}
+//   // そのまま自分の投稿に
+//   &.isNextMe {
+//     transform: translateX(var(--spacing-small));
+//   }
+// }
 </style>

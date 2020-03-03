@@ -43,10 +43,7 @@ function docToChatMessageModel(docRef: DocumentSnapshot): ChatMessage {
     id: docRef.id,
     text: data.text,
     userId: data.userId,
-    nextUserId: undefined,
-    photoUrl: data.photoUrl,
     createdAt: data.createdAt?.toDate(), // サーバー時刻はまだ入っていないことがある
-    isLast: false,
   }
 }
 /**

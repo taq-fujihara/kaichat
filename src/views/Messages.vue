@@ -2,10 +2,9 @@
   <div class="wrapper">
     <div class="chat-messages">
       <component
-        v-for="(message, i) in messages"
+        v-for="message in messages"
         :is="getMessageComponent(message.userId)"
-        :even="i % 2 === 0"
-        :is-next-me="message.nextUserId === $store.state.user.id"
+        :is-next-me="message.meta.isNextMyMessage"
         :key="message.id"
         :text="message.text"
         :photoUrl="findPhotoUrl(message.userId)"
@@ -85,7 +84,7 @@ function scrollToBottom() {
 
 async function getLastCachedMessage() {
   if (!cache) {
-    throw new Error('cache is not activated yey')
+    throw new Error('cache is not activated yet')
   }
   const m = await cache.messages
     .orderBy('createdAt')
@@ -110,22 +109,25 @@ async function cacheMessages(messages: ChatMessage[]) {
   return cachedCount
 }
 
-function addMetadataToMessages(messages: ChatMessage[]): void {
+function addMetadataToMessages(messages: ChatMessage[], me: string): void {
   messages.forEach((m, i, arr) => {
+    m.meta = {
+      isNextMyMessage: false,
+    }
     const nextIndex = i + 1
     if (arr.length > nextIndex) {
       const next = arr[nextIndex]
-      m.nextUserId = next.userId
+      m.meta.isNextMyMessage = next.userId === me
     }
   })
 }
 
 function existsNewMessage(
   currentMessages: ChatMessage[],
-  messages: ChatMessage[],
+  newMessages: ChatMessage[],
 ): boolean {
   const currentLastMessageId = currentMessages[currentMessages.length - 1]?.id
-  const lastMessageId = messages[messages.length - 1]?.id
+  const lastMessageId = newMessages[newMessages.length - 1]?.id
 
   if (currentLastMessageId === undefined && lastMessageId === undefined) {
     return false
@@ -218,13 +220,7 @@ export default class Messages extends Vue {
         async newMessages => {
           newMessages.reverse()
 
-          // 既存のメッセージに追加する場合、既存の最後の行に影響を与える
-          const messages = [lastCachedMessage, ...newMessages]
-
-          addMetadataToMessages(messages)
-          // TODO 新しいメッセージは取得する時点でキャッシュする？
-          //      それとも何件か溜まったらキャッシュする？
-          await cacheMessages(messages)
+          await cacheMessages(newMessages)
 
           const cachedMessages = await cache.messages
             .orderBy('createdAt')
@@ -242,6 +238,7 @@ export default class Messages extends Vue {
             return
           }
 
+          addMetadataToMessages(cachedMessages, this.$store.state.user.id)
           this.messages = cachedMessages
         },
       )
@@ -260,8 +257,8 @@ export default class Messages extends Vue {
             return
           }
 
-          addMetadataToMessages(messages)
           await cacheMessages(messages)
+          addMetadataToMessages(messages, this.$store.state.user.id)
 
           this.messages = messages
         },

@@ -1,7 +1,7 @@
 <template>
-  <div class="chat-message-wrapper" :class="{ even }">
-    <div class="guide-shadow" :class="{ even, isNextMe }"></div>
-    <div class="guide" :class="{ even, isNextMe }"></div>
+  <div class="chat-message-wrapper" :class="{ 'is-next-me': isNextMe }">
+    <div class="guide-shadow"></div>
+    <div class="guide"></div>
 
     <Avatar
       :photo-url="photoUrl"
@@ -58,8 +58,55 @@ export default class ChatMessage extends Vue {
   margin-top: var(--spacing-medium);
   margin-right: 64px;
 
-  &.even {
+  &:nth-child(odd) {
     margin-left: 16px;
+
+    &:not(.is-next-me) {
+      .guide,
+      .guide-shadow {
+        clip-path: polygon(23% 0, 100% 0, 65% 99%, 0 100%);
+      }
+    }
+  }
+
+  .guide,
+  .guide-shadow {
+    position: absolute;
+    background-color: var(--color-app-black);
+  }
+  .guide-shadow {
+    opacity: 0.4;
+  }
+
+  &.is-next-me {
+    .guide,
+    .guide-shadow {
+      top: 20px;
+      bottom: -60px;
+      left: 20px;
+      right: 0px;
+      width: 100%;
+      clip-path: polygon(0 0, 100% calc(100% - 24px), 100% 100%, 0 32px);
+    }
+    .guide-shadow {
+      transform: translateY(var(--spacing-small));
+    }
+  }
+
+  &:not(.is-next-me) {
+    .guide,
+    .guide-shadow {
+      top: 20px;
+      bottom: -60px;
+      left: 20px;
+      right: auto;
+      width: 30px;
+      clip-path: polygon(79% 0, 100% 100%, 40% 100%, 0 0);
+    }
+
+    .guide-shadow {
+      transform: translateX(var(--spacing-small));
+    }
   }
 
   &:last-child {
@@ -134,44 +181,6 @@ export default class ChatMessage extends Vue {
 
   &__chat-text-line {
     display: block;
-  }
-}
-
-.guide,
-.guide-shadow {
-  position: absolute;
-  background-color: var(--color-app-black);
-
-  // 基本（相手の投稿から相手の投稿へ）
-  top: 20px;
-  bottom: -60px;
-  left: 20px;
-  right: auto;
-  width: 30px;
-  clip-path: polygon(79% 0, 100% 100%, 40% 100%, 0 0);
-
-  &:not(.isNextMe).even {
-    // ジグザグに
-    clip-path: polygon(23% 0, 100% 0, 65% 99%, 0 100%);
-  }
-
-  // 自分の投稿に
-  &.isNextMe {
-    right: 0px;
-    width: 100%;
-    clip-path: polygon(0 0, 100% calc(100% - 24px), 100% 100%, 0 32px);
-  }
-}
-
-.guide-shadow {
-  opacity: 0.4;
-
-  // 基本
-  transform: translateX(var(--spacing-small));
-
-  // そのまま相手の投稿に
-  &.isNextMe {
-    transform: translateY(var(--spacing-small));
   }
 }
 </style>
