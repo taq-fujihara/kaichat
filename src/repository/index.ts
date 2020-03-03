@@ -6,7 +6,7 @@ import { User } from '@/models/User'
 /**
  * 表示できる直近のメッセージ数
  */
-const CHAT_MESSAGE_LIMIT = 50
+const CHAT_MESSAGE_LIMIT = 30
 
 type DocumentSnapshot = firebase.firestore.DocumentSnapshot<
   firebase.firestore.DocumentData
