@@ -169,6 +169,14 @@ export default class Messages extends Vue {
 
   async mounted() {
     try {
+      await this.loadMessages()
+    } catch (error) {
+      alert('メッセージがロードできませんでした！部屋一覧に戻ります。')
+      this.$router.push('/rooms')
+      return
+    }
+
+    try {
       const users = await Repository.getRoomMembers(this.roomId)
       // 自分を最後に
       const me = users.find(u => u.id === this.$store.state.user.id)
@@ -182,14 +190,6 @@ export default class Messages extends Vue {
       this.members = [...usersButMe, me]
     } catch (error) {
       alert('メンバーがロードできませんでした！部屋一覧に戻ります。')
-      this.$router.push('/rooms')
-      return
-    }
-
-    try {
-      await this.loadMessages()
-    } catch (error) {
-      alert('メッセージがロードできませんでした！部屋一覧に戻ります。')
       this.$router.push('/rooms')
       return
     }
