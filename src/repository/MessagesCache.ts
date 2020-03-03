@@ -5,10 +5,12 @@ export class MessagesCache extends Dexie {
   messages: Dexie.Table<ChatMessage, string>
 
   constructor(roomId: string) {
-    super(roomId)
+    super('room:' + roomId)
+
     this.version(1).stores({
       messages: 'id, userId, createdAt',
     })
+
     this.messages = this.table('messages')
   }
 }

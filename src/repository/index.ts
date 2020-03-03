@@ -199,6 +199,8 @@ export default class Repository {
           }
         })
 
+        messages.reverse()
+
         onNext(messages)
       })
   }
@@ -223,6 +225,8 @@ export default class Repository {
             messages.push(model)
           }
         })
+
+        messages.reverse()
 
         onNext(messages)
       })

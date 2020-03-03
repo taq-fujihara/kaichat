@@ -168,6 +168,8 @@ export default class Messages extends Vue {
   // ******************************************************
 
   async mounted() {
+    this.initCache()
+
     try {
       await this.loadMessages()
     } catch (error) {
@@ -206,11 +208,13 @@ export default class Messages extends Vue {
   // Instance methods
   // ******************************************************
 
+  initCache() {
+    if (cache) cache.close()
+    cache = new MessagesCache(this.roomId) // TODO cache this instance?
+  }
+
   async loadMessages() {
     this.unsubscribe()
-    if (cache) cache.close()
-
-    cache = new MessagesCache(this.roomId) // TODO cache this instance?
 
     const lastCachedMessage = await getLastCachedMessage()
     if (lastCachedMessage) {
@@ -218,8 +222,9 @@ export default class Messages extends Vue {
         this.roomId,
         lastCachedMessage.id,
         async newMessages => {
-          newMessages.reverse()
-
+          // ちょっと横着して、新着メッセージをキャッシュしたあとに改めて
+          // キャッシュから規定件数取得して洗い替えしている。
+          // 30件程度だから良いが、ちゃんと今のmessagesとマージすることを考える。
           await cacheMessages(newMessages)
 
           const cachedMessages = await cache.messages
@@ -227,7 +232,10 @@ export default class Messages extends Vue {
             .reverse()
             .limit(Repository.chatMessageLimit)
             .toArray()
+
           cachedMessages.reverse()
+
+          addMetadataToMessages(cachedMessages, this.$store.state.user.id)
 
           if (!existsNewMessage(this.messages, cachedMessages)) {
             // 現在表示している最後のメッセージと、新しいメッセージ一覧の最後が
@@ -239,6 +247,7 @@ export default class Messages extends Vue {
           }
 
           addMetadataToMessages(cachedMessages, this.$store.state.user.id)
+
           this.messages = cachedMessages
         },
       )
@@ -246,8 +255,6 @@ export default class Messages extends Vue {
       this.unsubscribe = Repository.onMessagesChange(
         this.roomId,
         async messages => {
-          messages.reverse()
-
           if (!existsNewMessage(this.messages, messages)) {
             // 現在表示している最後のメッセージと、新しいメッセージ一覧の最後が
             // 一致しているならば特に何も変わっていないはずなので更新処理はスキップ。
