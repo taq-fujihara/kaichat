@@ -3,7 +3,11 @@
     <div class="guide-shadow" :class="{ even, isNextMe }"></div>
     <div class="guide" :class="{ even, isNextMe }"></div>
 
-    <Avatar :photo-url="photoUrl" :background-color="avatarBackgroundColor" />
+    <Avatar
+      :photo-url="photoUrl"
+      loading="lazy"
+      :background-color="avatarBackgroundColor"
+    />
 
     <div class="chat-message">
       <div class="chat-message__background"></div>
