@@ -76,8 +76,8 @@ export default class ChatMessageMine extends Vue {
   padding-left: 24px;
   padding-right: 24px;
 
-  background-color: #000304;
-  color: #000304;
+  background-color: var(--color-app-black);
+  color: var(--color-app-black);
 
   &__background {
     position: absolute;
@@ -111,7 +111,7 @@ export default class ChatMessageMine extends Vue {
   }
 
   &__arrow-shadow {
-    background-color: #000304;
+    background-color: var(--color-app-black);
     top: 5px;
     right: -30px;
     height: 40px;
@@ -134,7 +134,7 @@ export default class ChatMessageMine extends Vue {
 .guide,
 .guide-shadow {
   position: absolute;
-  background-color: #000304;
+  background-color: var(--color-app-black);
 
   // 基本（自分の投稿から相手の投稿へ）
   top: 20px;

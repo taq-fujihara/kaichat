@@ -88,14 +88,14 @@ export default class ChatMessage extends Vue {
     bottom: 8px;
     left: 6px;
     right: 8px;
-    background-color: #000304;
+    background-color: var(--color-app-black);
     transform: skewX(5deg) rotate(1deg);
   }
 
   &__arrow,
   &__arrow-shadow {
     position: absolute;
-    background-color: #000304;
+    background-color: var(--color-app-black);
 
     top: 10px;
     left: -25px;
@@ -136,7 +136,7 @@ export default class ChatMessage extends Vue {
 .guide,
 .guide-shadow {
   position: absolute;
-  background-color: #000304;
+  background-color: var(--color-app-black);
 
   // 基本（相手の投稿から相手の投稿へ）
   top: 20px;

@@ -171,7 +171,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-$bg-color: #000304;
 $footer-height: 60px;
 $contents-width: 390px;
 
@@ -216,7 +215,7 @@ $contents-width: 390px;
       0 100%
     );
 
-    background-color: $bg-color;
+    background-color: var(--color-app-black);
   }
 }
 
@@ -241,7 +240,7 @@ $contents-width: 390px;
   display: flex;
   justify-content: center;
 
-  background-color: $bg-color;
+  background-color: var(--color-app-black);
   opacity: 0.9;
 }
 
@@ -267,7 +266,7 @@ $contents-width: 390px;
       margin-right: var(--spacing-medium);
 
       line-height: 25px;
-      background-color: $bg-color;
+      background-color: var(--color-app-black);
       color: #fff;
       border: none;
       outline: none;
