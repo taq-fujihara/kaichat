@@ -113,7 +113,11 @@ export default {
       }
     },
     findPhotoUrl(userId) {
-      return this.$store.state.members.find(m => m.id === userId).photoUrl
+      const user = this.$store.state.members.find(m => m.id === userId)
+      if (!user) {
+        return undefined
+      }
+      return user.photoUrl
     },
     async publishMessage() {
       if (!this.message) {
