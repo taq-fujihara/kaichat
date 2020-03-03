@@ -23,7 +23,7 @@
         <div class="avatars">
           <div class="avatars__shadow"></div>
           <Avatar
-            v-for="user in $store.state.members"
+            v-for="user in members"
             :key="user.id"
             :photo-url="user.photoUrl"
             :is-small="true"
@@ -62,11 +62,20 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 import Avatar from '@/components/Avatar.vue'
-import ChatMessage from '@/components/ChatMessage.vue'
+import ChatMessageComponent from '@/components/ChatMessage.vue'
 import ChatMessageMine from '@/components/ChatMessageMine.vue'
 import Repository from '@/repository'
+import { MessagesCache } from '@/repository/MessagesCache'
+import { User } from '@/models/User'
+import ChatMessage from '@/models/ChatMessage'
+
+const REFRESH_COUNT = 5
+
+let cache: MessagesCache
+const photoUrlCache = new Map<string, string | null>()
 
 function scrollToBottom() {
   const elem = document.documentElement
@@ -74,103 +83,241 @@ function scrollToBottom() {
   window.scroll(0, bottom)
 }
 
-export default {
-  name: 'Messages',
-  components: {
-    ChatMessage,
-    ChatMessageMine,
-    Avatar,
-  },
-  props: {
-    roomId: {
-      type: String,
-      required: true,
-    },
-  },
-  data() {
-    return {
-      message: '',
-      sendingMessage: false,
+async function getLastCachedMessage() {
+  if (!cache) {
+    throw new Error('cache is not activated yey')
+  }
+  const m = await cache.messages
+    .orderBy('createdAt')
+    .reverse()
+    .limit(1)
+    .toArray()
+
+  return m.length > 0 ? m[0] : undefined
+}
+
+async function cacheMessages(messages: ChatMessage[]) {
+  let cachedCount = 0
+  for (const message of messages) {
+    if (await cache.messages.get(message.id)) {
+      // already cached
+      await cache.messages.put(message)
+    } else {
+      await cache.messages.add(message)
+      cachedCount++
     }
-  },
-  computed: {
-    messages() {
-      return this.$store.state.messages
-    },
-  },
-  watch: {
-    async messages() {
-      await this.$nextTick()
-      scrollToBottom()
-    },
-  },
-  methods: {
-    getMessageComponent(userId) {
-      if (userId === this.$store.state.user.id) {
-        return ChatMessageMine
-      } else {
-        return ChatMessage
-      }
-    },
-    findPhotoUrl(userId) {
-      const user = this.$store.state.members.find(m => m.id === userId)
-      if (!user) {
-        return undefined
-      }
-      return user.photoUrl
-    },
-    async publishMessage() {
-      if (!this.message) {
-        return
-      }
+  }
+  return cachedCount
+}
 
-      this.sendingMessage = true
+function addMetadataToMessages(messages: ChatMessage[]): void {
+  messages.forEach((m, i, arr) => {
+    const nextIndex = i + 1
+    if (arr.length > nextIndex) {
+      const next = arr[nextIndex]
+      m.nextUserId = next.userId
+    }
+  })
+}
 
-      try {
-        await Repository.addMessage(
-          this.roomId,
-          this.$store.state.user.id,
-          this.message,
-        )
-      } catch (error) {
-        this.sendingMessage = false
-        throw new Error(error)
-      }
+function existsNewMessage(
+  currentMessages: ChatMessage[],
+  messages: ChatMessage[],
+): boolean {
+  const currentLastMessageId = currentMessages[currentMessages.length - 1]?.id
+  const lastMessageId = messages[messages.length - 1]?.id
 
-      this.message = ''
-      this.sendingMessage = false
-    },
-    keyEnter(e) {
-      if (e.shiftKey) {
-        this.publishMessage()
-      }
-    },
-  },
-  created() {
-    this.$store.commit('clearMessages')
-  },
+  if (currentLastMessageId === undefined && lastMessageId === undefined) {
+    return false
+  }
+
+  return currentLastMessageId !== lastMessageId
+}
+
+@Component({
+  components: { Avatar, ChatMessageComponent, ChatMessageMine },
+})
+export default class Messages extends Vue {
+  @Prop({ type: String, required: true }) roomId!: string
+
+  private message = ''
+  private sendingMessage = false
+  private members = new Array<User>()
+  private messages = new Array<ChatMessage>()
+  private unsubscribe = () => {
+    // do nothing
+  }
+  private messageSubscribeCount = 0
+
+  @Watch('messages')
+  async onMessage() {
+    await this.$nextTick()
+    scrollToBottom()
+
+    this.messageSubscribeCount += 1
+    if (this.messageSubscribeCount > REFRESH_COUNT) {
+      await this.loadMessages()
+      this.messageSubscribeCount = 0
+    }
+  }
+
+  // ******************************************************
+  // Lifecycle hooks
+  // ******************************************************
+
   async mounted() {
     try {
-      await this.$store.dispatch('loadMessages', this.roomId)
-    } catch (error) {
-      alert('メッセージが取得できませんでした！部屋一覧に戻ります。')
-      this.$router.push('/rooms')
-      return
-    }
+      const users = await Repository.getRoomMembers(this.roomId)
+      // 自分を最後に
+      const me = users.find(u => u.id === this.$store.state.user.id)
+      const usersButMe = users.filter(u => u.id !== this.$store.state.user.id)
+      usersButMe.sort()
 
-    try {
-      await this.$store.dispatch('loadMembers', this.roomId)
+      if (!me) {
+        throw new Error()
+      }
+
+      this.members = [...usersButMe, me]
     } catch (error) {
       alert('メンバーがロードできませんでした！部屋一覧に戻ります。')
       this.$router.push('/rooms')
       return
     }
 
+    try {
+      await this.loadMessages()
+    } catch (error) {
+      alert('メッセージがロードできませんでした！部屋一覧に戻ります。')
+      this.$router.push('/rooms')
+      return
+    }
+
     await Repository.saveUsersLastRoom(this.$store.state.user.id, this.roomId)
-  },
+  }
+
   beforeDestroy() {
-    this.$store.dispatch('unsubscribeMessages')
-  },
+    this.unsubscribe()
+    if (cache) cache.close()
+  }
+
+  // ******************************************************
+  // Instance methods
+  // ******************************************************
+
+  async loadMessages() {
+    this.unsubscribe()
+    if (cache) cache.close()
+
+    cache = new MessagesCache(this.roomId) // TODO cache this instance?
+
+    const lastCachedMessage = await getLastCachedMessage()
+    if (lastCachedMessage) {
+      this.unsubscribe = await Repository.onMessagesChangeFrom(
+        this.roomId,
+        lastCachedMessage.id,
+        async newMessages => {
+          newMessages.reverse()
+
+          // 既存のメッセージに追加する場合、既存の最後の行に影響を与える
+          const messages = [lastCachedMessage, ...newMessages]
+
+          addMetadataToMessages(messages)
+          // TODO 新しいメッセージは取得する時点でキャッシュする？
+          //      それとも何件か溜まったらキャッシュする？
+          await cacheMessages(messages)
+
+          const cachedMessages = await cache.messages
+            .orderBy('createdAt')
+            .reverse()
+            .limit(Repository.chatMessageLimit)
+            .toArray()
+          cachedMessages.reverse()
+
+          if (!existsNewMessage(this.messages, cachedMessages)) {
+            // 現在表示している最後のメッセージと、新しいメッセージ一覧の最後が
+            // 一致しているならば特に何も変わっていないはずなので更新処理はスキップ。
+            // 実際、メッセージドキュメントが追加された時点で更新が検知されるが、
+            // メッセージの作成日時にサーバータイムスタンプを使っているので、
+            // サーバータイムスタンプが付与された時点でもう一度更新が検知されてしまう。
+            return
+          }
+
+          this.messages = cachedMessages
+        },
+      )
+    } else {
+      this.unsubscribe = Repository.onMessagesChange(
+        this.roomId,
+        async messages => {
+          messages.reverse()
+
+          if (!existsNewMessage(this.messages, messages)) {
+            // 現在表示している最後のメッセージと、新しいメッセージ一覧の最後が
+            // 一致しているならば特に何も変わっていないはずなので更新処理はスキップ。
+            // 実際、メッセージドキュメントが追加された時点で更新が検知されるが、
+            // メッセージの作成日時にサーバータイムスタンプを使っているので、
+            // サーバータイムスタンプが付与された時点でもう一度更新が検知されてしまう。
+            return
+          }
+
+          addMetadataToMessages(messages)
+          await cacheMessages(messages)
+
+          this.messages = messages
+        },
+      )
+    }
+  }
+
+  getMessageComponent(userId: string) {
+    if (userId === this.$store.state.user.id) {
+      return ChatMessageMine
+    } else {
+      return ChatMessageComponent
+    }
+  }
+
+  findPhotoUrl(userId: string) {
+    const cache = photoUrlCache.get(userId)
+    if (cache) {
+      return cache
+    }
+    const users: User[] = this.members
+    const user = users.find(m => m.id === userId)
+    if (!user) {
+      return undefined
+    }
+    photoUrlCache.set(userId, user.photoUrl)
+    return user.photoUrl
+  }
+
+  async publishMessage() {
+    if (!this.message) {
+      return
+    }
+
+    this.sendingMessage = true
+
+    try {
+      await Repository.addMessage(
+        this.roomId,
+        this.$store.state.user.id,
+        this.message,
+      )
+    } catch (error) {
+      this.sendingMessage = false
+      throw new Error(error)
+    }
+
+    this.message = ''
+    this.sendingMessage = false
+  }
+
+  keyEnter(e: KeyboardEvent) {
+    if (e.shiftKey) {
+      this.publishMessage()
+    }
+  }
 }
 </script>
 

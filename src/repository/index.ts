@@ -45,7 +45,7 @@ function docToChatMessageModel(docRef: DocumentSnapshot): ChatMessage {
     userId: data.userId,
     nextUserId: undefined,
     photoUrl: data.photoUrl,
-    createdAt: data.createdAt,
+    createdAt: data.createdAt?.toDate(), // サーバー時刻はまだ入っていないことがある
     isLast: false,
   }
 }
@@ -53,6 +53,10 @@ function docToChatMessageModel(docRef: DocumentSnapshot): ChatMessage {
  * バックエンドデータ管理
  */
 export default class Repository {
+  static get chatMessageLimit(): number {
+    return CHAT_MESSAGE_LIMIT
+  }
+
   static async getUser(user: User) {
     let userDoc = await db.doc(`/users/${user.id}`).get()
 
@@ -189,11 +193,40 @@ export default class Repository {
       .collection(`/rooms/${roomId}/messages`)
       .orderBy('createdAt', 'desc')
       .limit(CHAT_MESSAGE_LIMIT)
-      .onSnapshot(snapshot => {
+      .onSnapshot(async snapshot => {
         const messages = new Array<ChatMessage>()
         snapshot.forEach(doc => {
-          messages.push(docToChatMessageModel(doc))
+          const model = docToChatMessageModel(doc)
+          if (model.createdAt) {
+            messages.push(docToChatMessageModel(doc))
+          }
         })
+
+        onNext(messages)
+      })
+  }
+
+  static async onMessagesChangeFrom(
+    roomId: string,
+    messageId: string,
+    onNext: (messages: Array<ChatMessage>) => void,
+  ) {
+    const doc = await db.doc(`/rooms/${roomId}/messages/${messageId}`).get()
+
+    return db
+      .collection(`/rooms/${roomId}/messages`)
+      .orderBy('createdAt', 'desc')
+      .endBefore(doc)
+      .limit(CHAT_MESSAGE_LIMIT)
+      .onSnapshot(async snapshot => {
+        const messages = new Array<ChatMessage>()
+        snapshot.forEach(doc => {
+          const model = docToChatMessageModel(doc)
+          if (model.createdAt) {
+            messages.push(model)
+          }
+        })
+
         onNext(messages)
       })
   }
