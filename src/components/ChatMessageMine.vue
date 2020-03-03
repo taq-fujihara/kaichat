@@ -1,7 +1,7 @@
 <template>
   <div class="chat-message-wrapper chat-message-wrapper">
-    <div v-if="!isLast" class="guide-shadow" :class="{ even, isNextMe }"></div>
-    <div v-if="!isLast" class="guide" :class="{ even, isNextMe }"></div>
+    <div class="guide-shadow" :class="{ even, isNextMe }"></div>
+    <div class="guide" :class="{ even, isNextMe }"></div>
 
     <div class="chat-message chat-message">
       <div class="chat-message__background chat-message__background"></div>
@@ -31,7 +31,6 @@ export default class ChatMessageMine extends Vue {
   @Prop() private text!: string
   @Prop() private even!: boolean
   @Prop() private isNextMe!: boolean
-  @Prop() private isLast!: boolean
 
   private get displayText(): Array<string> {
     if (!this.text) {
@@ -49,10 +48,17 @@ export default class ChatMessageMine extends Vue {
   display: flex;
   align-items: flex-start;
 
-  margin-top: 24px;
+  margin-top: var(--spacing-medium);
   margin-left: 64px;
 
   justify-content: flex-end;
+
+  &:last-child {
+    .guide,
+    .guide-shadow {
+      display: none;
+    }
+  }
 }
 
 .chat-message {
@@ -135,7 +141,7 @@ export default class ChatMessageMine extends Vue {
   bottom: -60px;
   left: -20px;
   right: 30px;
-  clip-path: polygon(100% 0, 100% 26%, 0 100%, 0 82%);
+  clip-path: polygon(100% 0, 100% 24px, 0 100%, 0 calc(100% - 16px));
 
   // そのまま自分の投稿に
   &.isNextMe {
@@ -155,12 +161,11 @@ export default class ChatMessageMine extends Vue {
   opacity: 0.4;
 
   // 基本
-  bottom: -70px;
+  transform: translateY(var(--spacing-small));
 
-  // そのまま相手の投稿に
+  // そのまま自分の投稿に
   &.isNextMe {
-    bottom: -60px;
-    right: 45px;
+    transform: translateX(var(--spacing-small));
   }
 }
 </style>

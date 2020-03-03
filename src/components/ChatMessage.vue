@@ -1,7 +1,7 @@
 <template>
   <div class="chat-message-wrapper" :class="{ even }">
-    <div v-if="!isLast" class="guide-shadow" :class="{ even, isNextMe }"></div>
-    <div v-if="!isLast" class="guide" :class="{ even, isNextMe }"></div>
+    <div class="guide-shadow" :class="{ even, isNextMe }"></div>
+    <div class="guide" :class="{ even, isNextMe }"></div>
 
     <Avatar :photo-url="photoUrl" :background-color="avatarBackgroundColor" />
 
@@ -37,7 +37,6 @@ export default class ChatMessage extends Vue {
   @Prop() private avatarBackgroundColor!: string
   @Prop() private even!: boolean
   @Prop() private isNextMe!: boolean
-  @Prop() private isLast!: boolean
 
   private get displayText(): Array<string> {
     return this.text.split('\n')
@@ -52,11 +51,18 @@ export default class ChatMessage extends Vue {
   display: flex;
   align-items: flex-start;
 
-  margin-top: 32px;
+  margin-top: var(--spacing-medium);
   margin-right: 64px;
 
   &.even {
     margin-left: 16px;
+  }
+
+  &:last-child {
+    .guide,
+    .guide-shadow {
+      display: none;
+    }
   }
 }
 
@@ -65,7 +71,6 @@ export default class ChatMessage extends Vue {
   position: relative;
 
   min-width: 60px;
-
   transform: skewX(-15deg) rotate(-2deg);
 
   margin-top: 4px;
@@ -146,11 +151,11 @@ export default class ChatMessage extends Vue {
     clip-path: polygon(23% 0, 100% 0, 65% 99%, 0 100%);
   }
 
-  // そのまま相手の投稿に
+  // 自分の投稿に
   &.isNextMe {
     right: 0px;
     width: 100%;
-    clip-path: polygon(0 0, 100% 76%, 100% 100%, 0 24%);
+    clip-path: polygon(0 0, 100% calc(100% - 24px), 100% 100%, 0 32px);
   }
 }
 
@@ -158,13 +163,11 @@ export default class ChatMessage extends Vue {
   opacity: 0.4;
 
   // 基本
-  bottom: -60px;
-  left: 25px;
+  transform: translateX(var(--spacing-small));
 
   // そのまま相手の投稿に
   &.isNextMe {
-    top: 30px;
-    bottom: -70px;
+    transform: translateY(var(--spacing-small));
   }
 }
 </style>

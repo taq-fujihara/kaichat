@@ -9,7 +9,6 @@
         :key="message.id"
         :text="message.text"
         :photoUrl="findPhotoUrl(message.userId)"
-        :is-last="!message.nextUserId"
       />
     </div>
 
