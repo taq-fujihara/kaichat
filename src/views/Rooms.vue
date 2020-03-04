@@ -1,12 +1,24 @@
 <template>
   <div class="wrapper">
+    <div class="header">
+      <div class="header-contents-right"></div>
+      <div class="header-contents-left">
+        <div>
+          <i
+            class="fas fa-cog clickable fa-lg"
+            @click="$router.push('/settings')"
+          ></i>
+        </div>
+      </div>
+    </div>
+
     <div class="contents">
       <ChatMessage
         :text="chooseRoomText"
         avatar-background-color="blue"
         :is-next-me="true"
       />
-      <ChatMessageMine :is-last="true">
+      <ChatMessageMine>
         <div class="rooms">
           <div class="room" v-for="room in rooms" :key="room.id">
             <a href="#" @click.prevent="viewMessages(room)">
@@ -124,13 +136,37 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+$contents-width: 390px;
+
 .wrapper {
   display: flex;
   justify-content: center;
 }
 
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 8px;
+
+  display: flex;
+
+  color: #fff;
+  opacity: 0.9;
+
+  .header-contents-right {
+    flex: 1;
+  }
+
+  .header-contents-left {
+    display: flex;
+  }
+}
+
 .contents {
-  width: 400px;
+  width: 100%;
+  max-width: $contents-width;
 }
 
 .room {

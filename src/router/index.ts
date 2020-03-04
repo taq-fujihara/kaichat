@@ -3,6 +3,7 @@ import VueRouter from 'vue-router'
 import Rooms from '../views/Rooms.vue'
 import Room from '../views/Room.vue'
 import Messages from '../views/Messages.vue'
+import Settings from '../views/Settings.vue'
 import store from '@/store'
 
 Vue.use(VueRouter)
@@ -28,6 +29,11 @@ const routes = [
     name: 'Messages',
     component: Messages,
     props: true,
+  },
+  {
+    path: '/settings',
+    name: 'Settings',
+    component: Settings,
   },
   {
     path: '/about',
