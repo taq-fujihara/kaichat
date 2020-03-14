@@ -7,7 +7,7 @@
     "build": "vue-cli-service build",
     "postbuild": "node scripts/postbuild.js",
     "test:unit": "vue-cli-service test:unit",
-    "emulate:firestore": "firebase emulators:start --only firestore",
+    "firebase:emulator": "firebase emulators:start --only firestore,functions",
     "deploy:hosting": "npm run build && firebase deploy --only hosting",
     "deploy:rules": "firebase deploy --only firestore:rules",
     "lint": "vue-cli-service lint"
