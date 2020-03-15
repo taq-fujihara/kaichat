@@ -71,6 +71,7 @@ import { MessagesCache } from '@/repository/MessagesCache'
 import { User } from '@/models/User'
 import ChatMessage from '@/models/ChatMessage'
 
+// 何回メッセージの変更通知を受けたらハンドラを再取得するか
 const REFRESH_COUNT = 5
 
 let cache: MessagesCache
@@ -158,7 +159,10 @@ export default class Messages extends Vue {
 
     this.messageSubscribeCount += 1
     if (this.messageSubscribeCount > REFRESH_COUNT) {
-      await this.loadMessages()
+      const lastCachedMessage = await getLastCachedMessage()
+      lastCachedMessage
+        ? await this.loadMessagesFrom(lastCachedMessage)
+        : this.loadMessages()
       this.messageSubscribeCount = 0
     }
   }
@@ -171,7 +175,21 @@ export default class Messages extends Vue {
     this.initCache()
 
     try {
-      await this.loadMessages()
+      // 初期表示で早くなるようとりあえずキャッシュからメッセージをロードしてしまう
+      const messagesFromCache = await this.fetchMessagesFromCache()
+      this.setMessages(messagesFromCache)
+
+      // この部分は後続の処理を待たずに描画させる
+      await this.$nextTick()
+
+      const lastCachedMessage =
+        messagesFromCache.length > 0
+          ? messagesFromCache.slice(-1)[0]
+          : undefined
+
+      lastCachedMessage
+        ? await this.loadMessagesFrom(lastCachedMessage)
+        : this.loadMessages()
     } catch (error) {
       alert('メッセージがロードできませんでした！部屋一覧に戻ります。')
       this.$router.push('/rooms')
@@ -180,6 +198,7 @@ export default class Messages extends Vue {
 
     try {
       const users = await Repository.getRoomMembers(this.roomId)
+
       // 自分を最後に
       const me = users.find(u => u.id === this.$store.state.user.id)
       const usersButMe = users.filter(u => u.id !== this.$store.state.user.id)
@@ -213,64 +232,69 @@ export default class Messages extends Vue {
     cache = new MessagesCache(this.roomId) // TODO cache this instance?
   }
 
-  async loadMessages() {
+  async fetchMessagesFromCache(): Promise<ChatMessage[]> {
+    const messages = await cache.messages
+      .orderBy('createdAt')
+      .reverse()
+      .limit(Repository.chatMessageLimit)
+      .toArray()
+
+    messages.reverse()
+
+    return messages
+  }
+
+  setMessages(messages: ChatMessage[]) {
+    addMetadataToMessages(messages, this.$store.state.user.id)
+    this.messages = messages
+  }
+
+  /**
+   * メッセージをリポジトリからロードする
+   */
+  loadMessages() {
     this.unsubscribe()
 
-    const lastCachedMessage = await getLastCachedMessage()
-    if (lastCachedMessage) {
-      this.unsubscribe = await Repository.onMessagesChangeFrom(
-        this.roomId,
-        lastCachedMessage.id,
-        async newMessages => {
-          // ちょっと横着して、新着メッセージをキャッシュしたあとに改めて
-          // キャッシュから規定件数取得して洗い替えしている。
-          // 30件程度だから良いが、ちゃんと今のmessagesとマージすることを考える。
-          await cacheMessages(newMessages)
+    this.unsubscribe = Repository.onMessagesChange(
+      this.roomId,
+      async messages => {
+        await cacheMessages(messages)
+        this.setMessages(messages)
+      },
+    )
+  }
 
-          const cachedMessages = await cache.messages
-            .orderBy('createdAt')
-            .reverse()
-            .limit(Repository.chatMessageLimit)
-            .toArray()
+  /**
+   * 指定のメッセージ以降のメッセージをリポジトリからロードする
+   */
+  async loadMessagesFrom(message: ChatMessage) {
+    this.unsubscribe()
 
-          cachedMessages.reverse()
+    this.unsubscribe = await Repository.onMessagesChangeFrom(
+      this.roomId,
+      message.id,
+      async newMessages => {
+        if (newMessages.length === 0) {
+          return
+        }
 
-          addMetadataToMessages(cachedMessages, this.$store.state.user.id)
+        // ちょっと横着して、新着メッセージをキャッシュしたあとに改めて
+        // キャッシュから規定件数取得して洗い替えしている。
+        // 一回に表示する件数はそんなに多くないから良いが、ちゃんと今のmessagesと
+        // マージすることを考える。
+        await cacheMessages(newMessages)
 
-          if (!existsNewMessage(this.messages, cachedMessages)) {
-            // 現在表示している最後のメッセージと、新しいメッセージ一覧の最後が
-            // 一致しているならば特に何も変わっていないはずなので更新処理はスキップ。
-            // 実際、メッセージドキュメントが追加された時点で更新が検知されるが、
-            // メッセージの作成日時にサーバータイムスタンプを使っているので、
-            // サーバータイムスタンプが付与された時点でもう一度更新が検知されてしまう。
-            return
-          }
+        const cachedMessages = await cache.messages
+          .orderBy('createdAt')
+          .reverse()
+          .limit(Repository.chatMessageLimit)
+          .toArray()
 
-          addMetadataToMessages(cachedMessages, this.$store.state.user.id)
+        cachedMessages.reverse()
 
-          this.messages = cachedMessages
-        },
-      )
-    } else {
-      this.unsubscribe = Repository.onMessagesChange(
-        this.roomId,
-        async messages => {
-          if (!existsNewMessage(this.messages, messages)) {
-            // 現在表示している最後のメッセージと、新しいメッセージ一覧の最後が
-            // 一致しているならば特に何も変わっていないはずなので更新処理はスキップ。
-            // 実際、メッセージドキュメントが追加された時点で更新が検知されるが、
-            // メッセージの作成日時にサーバータイムスタンプを使っているので、
-            // サーバータイムスタンプが付与された時点でもう一度更新が検知されてしまう。
-            return
-          }
-
-          await cacheMessages(messages)
-          addMetadataToMessages(messages, this.$store.state.user.id)
-
-          this.messages = messages
-        },
-      )
-    }
+        this.setMessages(cachedMessages)
+      },
+    )
   }
 
   getMessageComponent(userId: string) {
