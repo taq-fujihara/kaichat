@@ -1,4 +1,4 @@
-import { db, serverTimestamp, arrayUnion } from '@/firebaseApp'
+import { db, functions, serverTimestamp, arrayUnion } from '@/firebaseApp'
 import ChatMessage from '@/models/ChatMessage'
 import { Room } from '@/models/Room'
 import { User } from '@/models/User'
@@ -131,27 +131,11 @@ export default class Repository {
    * 配列でしか保持していないので、UID毎にUsersコレクションから
    * ヒットしている。あまり効率が良くないので追々考える。
    *
-   * @param id
+   * @param roomId
    */
-  static async getRoomMembers(id: string) {
-    const room = await Repository.getRoom(id)
-    const memberUids = room.members
-
-    const promises = memberUids.map(async uid => {
-      const userDoc = await db.doc(`/users/${uid}`).get()
-      if (!userDoc.exists) return undefined
-      const data = userDoc.data()
-      if (!data) throw new Error()
-      return {
-        id: userDoc.id,
-        name: data.name,
-        photoUrl: data.photoUrl,
-        lastRoom: data.lastRoom,
-      }
-    })
-
-    const members = await Promise.all(promises)
-    return members.filter(m => m !== undefined) as Array<User>
+  static async getRoomMembers(roomId: string): Promise<User[]> {
+    const f = await functions.httpsCallable('getRoomMembers')({ roomId })
+    return f.data
   }
 
   /**

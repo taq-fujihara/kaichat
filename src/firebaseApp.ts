@@ -1,6 +1,7 @@
 import { initializeApp, firestore } from 'firebase/app'
-import 'firebase/firestore'
 import 'firebase/auth'
+import 'firebase/firestore'
+import 'firebase/functions'
 import 'firebase/messaging'
 
 const app = initializeApp({
@@ -16,16 +17,20 @@ const app = initializeApp({
 })
 
 // Firestore
-const f = app.firestore()
+const _firestore = app.firestore()
+const _functions = app.functions()
+
 if (process.env.VUE_APP_FIRESTORE_EMULATOR_HOST) {
-  f.settings({
+  _firestore.settings({
     host: process.env.VUE_APP_FIRESTORE_EMULATOR_HOST,
     ssl: false,
   })
+  _functions.useFunctionsEmulator('http://localhost:5001')
 }
 
 export const auth = app.auth()
-export const db = f
+export const db = _firestore
+export const functions = app.functions()
 export const serverTimestamp = firestore.FieldValue.serverTimestamp
 export const arrayUnion = firestore.FieldValue.arrayUnion
 export const messaging = app.messaging()
