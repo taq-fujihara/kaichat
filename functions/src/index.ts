@@ -43,6 +43,63 @@ async function send(
   })
 }
 
+export const getRoomMembers = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new Error('Requires login to call this function')
+  }
+
+  const requestUserId = context.auth.uid
+  const roomId = data.roomId
+  const roomDoc = await db.doc(`/rooms/${roomId}`).get()
+  const room = roomDoc.data()
+  if (!room) {
+    throw new Error(`Room not found: ${roomId}`)
+  }
+
+  const roomMembers: string[] = room.members
+
+  if (!roomMembers.includes(requestUserId)) {
+    throw new Error(
+      `You are not allowed to fetch members of this room: ${roomId}`,
+    )
+  }
+
+  const members: {
+    id: string
+    name: string
+    photoUrl: string
+  }[] = await Promise.all(
+    roomMembers.map(async userId => {
+      const userDoc = await db.doc(`/users/${userId}`).get()
+      const user = userDoc.data()
+      if (!user) {
+        return {
+          id: userDoc.id,
+          name: '',
+          photoUrl: '',
+        }
+      }
+      return {
+        id: userDoc.id,
+        name: user.name,
+        photoUrl: user.photoUrl,
+      }
+    }),
+  )
+
+  const onlyPublicProperties = (member: {
+    id: string
+    name: string
+    photoUrl: string
+  }) => ({
+    id: member.id,
+    photoUrl: member.photoUrl,
+    name: member.name,
+  })
+
+  return members.map(onlyPublicProperties)
+})
+
 export const sendNotification = functions.firestore
   .document('/rooms/{roomId}/messages/{messageId}')
   .onCreate(async (snapshot, context) => {
