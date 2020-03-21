@@ -16,6 +16,10 @@
           </div>
         </div>
       </div>
+      <div class="actions">
+        <a class="actions__link" href="#" @click.prevent="back">Back</a>
+        <a class="actions__link" href="#" @click.prevent="signOut">Sign Out</a>
+      </div>
     </div>
   </div>
 </template>
@@ -23,9 +27,17 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
 import Avatar from '@/components/Avatar.vue'
+import { signOut } from '@/firebaseApp'
 
 @Component({ components: { Avatar } })
-export default class Settings extends Vue {}
+export default class Settings extends Vue {
+  back() {
+    this.$router.push('/rooms')
+  }
+  async signOut() {
+    await signOut()
+  }
+}
 </script>
 j
 <style lang="scss" scoped>
@@ -67,6 +79,17 @@ $contents-width: 390px;
   &__actions {
     display: flex;
     align-items: center;
+  }
+}
+
+.actions {
+  margin-top: var(--spacing-large);
+  color: #fff;
+
+  &__link {
+    &:not(:first-child) {
+      margin-left: var(--spacing-medium);
+    }
   }
 }
 </style>
