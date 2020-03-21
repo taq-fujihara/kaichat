@@ -3,7 +3,7 @@
     <div class="guide-shadow"></div>
     <div class="guide"></div>
 
-    <div class="chat-message chat-message">
+    <div class="chat-message chat-message" @click="visibleTime = !visibleTime">
       <div class="chat-message__background chat-message__background"></div>
 
       <div class="chat-message__arrow-shadow"></div>
@@ -18,6 +18,7 @@
         >
           {{ t }}
         </span>
+        <span v-if="visibleTime" class="created-at">{{ displayTime }}</span>
       </span>
     </div>
   </div>
@@ -29,14 +30,26 @@ import { Component, Prop, Vue } from 'vue-property-decorator'
 @Component
 export default class ChatMessageMine extends Vue {
   @Prop() private text!: string
-  @Prop() private even!: boolean
+  @Prop() private createdAt!: Date
   @Prop() private isNextMe!: boolean
+
+  // メッセージ時刻の表示非表示
+  visibleTime = false
 
   private get displayText(): Array<string> {
     if (!this.text) {
       return []
     }
     return this.text.split('\n')
+  }
+
+  private get displayTime() {
+    // 1年前とかちょっと凝りたいけど、どうせ今は表示件数制限とかあるからいいや、、、
+    const month = this.createdAt.getMonth()
+    const date = this.createdAt.getDate()
+    const hour = this.createdAt.getHours()
+    const minute = this.createdAt.getMinutes()
+    return `${month}/${date} ${hour}:${minute}`
   }
 }
 </script>
@@ -182,41 +195,11 @@ export default class ChatMessageMine extends Vue {
   }
 }
 
-// .guide,
-// .guide-shadow {
-//   position: absolute;
-//   background-color: var(--color-app-black);
-
-//   // 基本（自分の投稿から相手の投稿へ）
-//   top: 20px;
-//   bottom: -60px;
-//   left: -20px;
-//   right: 30px;
-//   clip-path: polygon(100% 0, 100% 24px, 0 100%, 0 calc(100% - 16px));
-
-//   // そのまま自分の投稿に
-//   &.isNextMe {
-//     left: auto;
-//     right: 50px;
-//     width: 32px;
-//     clip-path: polygon(0 0, 82% 0, 100% 100%, 38% 100%);
-
-//     // ジグザグに
-//     &.even {
-//       clip-path: polygon(23% 0, 100% 0, 65% 99%, 0 100%);
-//     }
-//   }
-// }
-
-// .guide-shadow {
-//   opacity: 0.4;
-
-//   // 基本
-//   transform: translateY(var(--spacing-small));
-
-//   // そのまま自分の投稿に
-//   &.isNextMe {
-//     transform: translateX(var(--spacing-small));
-//   }
-// }
+.created-at {
+  display: block;
+  text-align: right;
+  margin-top: var(--spacing-small);
+  font-size: var(--font-size-xsmall);
+  color: var(--color-app-gray);
+}
 </style>

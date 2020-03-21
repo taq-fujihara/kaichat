@@ -7,6 +7,7 @@
         :is-next-me="message.meta.isNextMyMessage"
         :key="message.id"
         :text="message.text"
+        :created-at="message.createdAt"
         :photoUrl="findPhotoUrl(message.userId)"
       />
     </div>
