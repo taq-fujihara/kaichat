@@ -127,11 +127,7 @@ export default class Repository {
   /**
    * 部屋のメンバーを取得する
    *
-   * TODO Roomsコレクションではメンバー（ユーザー）の一覧はUIDの
-   * 配列でしか保持していないので、UID毎にUsersコレクションから
-   * ヒットしている。あまり効率が良くないので追々考える。
-   *
-   * @param roomId
+   * @param roomId 部屋ID
    */
   static async getRoomMembers(roomId: string): Promise<User[]> {
     const f = await functions.httpsCallable('getRoomMembers')({ roomId })
