@@ -18,6 +18,9 @@
       </div>
       <div class="actions">
         <a class="actions__link" href="#" @click.prevent="back">Back</a>
+        <a class="actions__link" href="#" @click.prevent="clearCache"
+          >Clear Cache</a
+        >
         <a class="actions__link" href="#" @click.prevent="signOut">Sign Out</a>
       </div>
     </div>
@@ -28,18 +31,23 @@
 import { Component, Vue } from 'vue-property-decorator'
 import Avatar from '@/components/Avatar.vue'
 import { signOut } from '@/firebaseApp'
+import { clearAll } from '@/repository/MessagesCache'
 
 @Component({ components: { Avatar } })
 export default class Settings extends Vue {
   back() {
     this.$router.push('/rooms')
   }
+  async clearCache() {
+    await clearAll()
+    alert('キャッシュをクリアしました。')
+  }
   async signOut() {
     await signOut()
   }
 }
 </script>
-j
+
 <style lang="scss" scoped>
 $contents-width: 390px;
 
