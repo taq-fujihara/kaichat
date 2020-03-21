@@ -19,30 +19,11 @@ async function getUser(id: string) {
   }
 }
 
-async function send(
-  recipientTokens: string[],
-  message: string,
-  senderName: string,
-  senderphotoUrl: string,
-  roomId: string,
-): Promise<void> {
-  await admin.messaging().sendMulticast({
-    tokens: recipientTokens.filter(t => !!t),
-    notification: {
-      title: `${senderName}さんからメッセージが届きました`,
-      body: message,
-    },
-    webpush: {
-      notification: {
-        icon: senderphotoUrl,
-      },
-      fcmOptions: {
-        link: `/rooms/${roomId}/messages`,
-      },
-    },
-  })
-}
-
+/**
+ * 部屋メンバー一覧を取得する
+ *
+ * TODO 順番が保証されていない
+ */
 export const getRoomMembers = functions.https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new Error('Requires login to call this function')
@@ -100,6 +81,9 @@ export const getRoomMembers = functions.https.onCall(async (data, context) => {
   return members.map(onlyPublicProperties)
 })
 
+/**
+ * 新着メッセージ通知
+ */
 export const sendNotification = functions.firestore
   .document('/rooms/{roomId}/messages/{messageId}')
   .onCreate(async (snapshot, context) => {
@@ -115,14 +99,33 @@ export const sendNotification = functions.firestore
     }
     const roomMembers: string[] = roomDoc.data()?.members
     const membersButMe = roomMembers.filter(m => m !== senderId)
-    const notifyTo = await Promise.all(
-      membersButMe.map(async userId => {
-        const tokenDoc = await db.doc(`/fcmTokens/${userId}`).get()
-        return tokenDoc.data()?.token
-      }),
-    )
+    const recipientTokens = (
+      await Promise.all(
+        membersButMe.map(async userId => {
+          const tokenDoc = await db.doc(`/fcmTokens/${userId}`).get()
+          return tokenDoc.data()?.token
+        }),
+      )
+    ).filter(token => !!token) // そもそもトークンが見つからない場合は対象にしない
 
-    if (notifyTo.length > 0) {
-      await send(notifyTo, message, user.name, user.photoUrl, roomId)
+    if (recipientTokens.length === 0) {
+      return
     }
+
+    // 通知の送信
+    await admin.messaging().sendMulticast({
+      tokens: recipientTokens,
+      notification: {
+        title: user.name,
+        body: message,
+      },
+      webpush: {
+        notification: {
+          icon: user.photoUrl,
+        },
+        fcmOptions: {
+          link: `/rooms/${roomId}/messages`,
+        },
+      },
+    })
   })
