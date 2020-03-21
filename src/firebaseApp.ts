@@ -25,7 +25,11 @@ if (process.env.VUE_APP_FIRESTORE_EMULATOR_HOST) {
     host: process.env.VUE_APP_FIRESTORE_EMULATOR_HOST,
     ssl: false,
   })
-  _functions.useFunctionsEmulator('http://localhost:5001')
+}
+if (process.env.VUE_APP_FIREBASE_FUNCTIONS_EMULATOR_URL) {
+  _functions.useFunctionsEmulator(
+    process.env.VUE_APP_FIREBASE_FUNCTIONS_EMULATOR_URL,
+  )
 }
 
 export const auth = app.auth()
