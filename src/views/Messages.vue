@@ -83,6 +83,11 @@ function scrollToBottom() {
   window.scroll(0, bottom)
 }
 
+/**
+ * キャッシュされている最後のメッセージを取得する
+ *
+ * @throws キャッシュマネージャーが初期化されていない場合、エラーとなる
+ */
 async function getLastCachedMessage() {
   if (!cache) {
     throw new Error('cache is not activated yet')
@@ -96,6 +101,12 @@ async function getLastCachedMessage() {
   return m.length > 0 ? m[0] : undefined
 }
 
+/**
+ * メッセージをキャッシュする
+ *
+ * 既にキャッシュされているメッセージは内容を上書きする
+ * TODO もうキャッシュの内容が変わるようなことはないのでは？？
+ */
 async function cacheMessages(messages: ChatMessage[]) {
   let cachedCount = 0
   for (const message of messages) {
@@ -110,6 +121,11 @@ async function cacheMessages(messages: ChatMessage[]) {
   return cachedCount
 }
 
+/**
+ * メッセージにメタデータを追加/設定する
+ *
+ * @see {@link ChatMessage} for metadata contents
+ */
 function addMetadataToMessages(messages: ChatMessage[], me: string): void {
   messages.forEach((m, i, arr) => {
     m.meta = {
@@ -123,20 +139,11 @@ function addMetadataToMessages(messages: ChatMessage[], me: string): void {
   })
 }
 
-function existsNewMessage(
-  currentMessages: ChatMessage[],
-  newMessages: ChatMessage[],
-): boolean {
-  const currentLastMessageId = currentMessages[currentMessages.length - 1]?.id
-  const lastMessageId = newMessages[newMessages.length - 1]?.id
-
-  if (currentLastMessageId === undefined && lastMessageId === undefined) {
-    return false
-  }
-
-  return currentLastMessageId !== lastMessageId
-}
-
+/**
+ * メッセージ一覧
+ *
+ * 指定部屋IDのメッセージ一覧とメッセージ入力欄を表示する。
+ */
 @Component({
   components: { Avatar, ChatMessageComponent, ChatMessageMine },
 })
