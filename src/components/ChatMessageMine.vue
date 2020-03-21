@@ -66,11 +66,7 @@ export default class ChatMessageMine extends Vue {
 
   justify-content: flex-end;
 
-  margin-left: 16px;
-
   &:nth-child(odd) {
-    margin-left: 16px;
-
     &.is-next-me {
       .guide,
       .guide-shadow {
