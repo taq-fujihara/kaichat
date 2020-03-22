@@ -78,6 +78,7 @@ const REFRESH_COUNT = 5
 
 let cache: MessagesCache
 const photoUrlCache = new Map<string, string | null>()
+let readCache: { userId: string; messageId: string } | undefined
 
 function scrollToBottom() {
   const elem = document.documentElement
@@ -211,9 +212,12 @@ export default class Messages extends Vue {
   // Lifecycle hooks
   // ******************************************************
 
-  async mounted() {
+  created() {
     this.initCache()
+    document.addEventListener('visibilitychange', this.handleVisibilityChange)
+  }
 
+  async mounted() {
     try {
       // 初期表示で早くなるようとりあえずキャッシュからメッセージをロードしてしまう
       const messagesFromCache = await this.fetchMessagesFromCache()
@@ -268,6 +272,11 @@ export default class Messages extends Vue {
   beforeDestroy() {
     this.unsubscribeMessages()
     this.unsubscribeSomeoneRead()
+    readCache = undefined
+    document.removeEventListener(
+      'visibilitychange',
+      this.handleVisibilityChange,
+    )
     if (cache) cache.close()
   }
 
@@ -278,6 +287,21 @@ export default class Messages extends Vue {
   initCache() {
     if (cache) cache.close()
     cache = new MessagesCache(this.roomId) // TODO cache this instance?
+  }
+
+  /**
+   * ブラウザ/タブの表示非表示切替時処理
+   */
+  async handleVisibilityChange() {
+    if (document.hidden) {
+      return
+    }
+    if (!readCache) {
+      return
+    }
+
+    // hidden -> visible のタイミングで、既読更新キャッシュが残っていたら更新する
+    await this.updateReadUntil(readCache.messageId)
   }
 
   async fetchMessagesFromCache(): Promise<ChatMessage[]> {
@@ -320,8 +344,18 @@ export default class Messages extends Vue {
         await cacheMessages(messages)
         this.setMessages(messages)
 
-        if (messages.length > 0) {
-          await this.updateReadUntil(messages.slice(-1)[0].id)
+        // 既読処理
+        if (messages.length === 0) {
+          return
+        }
+        const message = messages.slice(-1)[0]
+        if (document.hidden) {
+          readCache = {
+            userId: this.$store.state.user.id,
+            messageId: message.id,
+          }
+        } else {
+          await this.updateReadUntil(message.id)
         }
       },
     )
@@ -359,8 +393,18 @@ export default class Messages extends Vue {
 
         this.setMessages(cachedMessages)
 
-        if (newMessages.length > 0) {
-          await this.updateReadUntil(newMessages.slice(-1)[0].id)
+        // 既読処理
+        if (newMessages.length === 0) {
+          return
+        }
+        const message = newMessages.slice(-1)[0]
+        if (document.hidden) {
+          readCache = {
+            userId: this.$store.state.user.id,
+            messageId: message.id,
+          }
+        } else {
+          await this.updateReadUntil(message.id)
         }
       },
     )
@@ -442,8 +486,6 @@ $contents-width: 400px;
 @media screen and (min-width: $contents-width) {
   .chat-messages {
     width: $contents-width;
-    padding-left: 0;
-    padding-right: 0;
   }
 }
 
