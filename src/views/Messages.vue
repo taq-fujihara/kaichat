@@ -13,15 +13,15 @@
     </div>
 
     <div class="header">
-      <div class="header-contents-right">
+      <div class="header__contents header__contents--right">
         <i
           class="fas fa-arrow-left fa-lg clickable"
           @click="$router.push('/rooms')"
-        ></i>
-      </div>
-      <div class="header-contents-left">
-        <div class="avatars">
-          <div class="avatars__shadow"></div>
+        />
+        <div class="header__title">
+          SNS
+        </div>
+        <div class="header__avatars">
           <Avatar
             v-for="user in members"
             :key="user.id"
@@ -29,12 +29,12 @@
             :is-small="true"
           />
         </div>
-        <div>
-          <i
-            class="fas fa-cog clickable fa-lg"
-            @click="$router.push(`/rooms/${roomId}`)"
-          ></i>
-        </div>
+      </div>
+      <div class="header__contents header__contents--left">
+        <i
+          class="fas fa-cog clickable fa-lg"
+          @click="$router.push(`/rooms/${roomId}`)"
+        />
       </div>
     </div>
 
@@ -206,17 +206,9 @@ export default class Messages extends Vue {
 
     try {
       const users = await Repository.getRoomMembers(this.roomId)
-
-      // 自分を最後に
-      const me = users.find(u => u.id === this.$store.state.user.id)
       const usersButMe = users.filter(u => u.id !== this.$store.state.user.id)
       usersButMe.sort()
-
-      if (!me) {
-        throw new Error()
-      }
-
-      this.members = [...usersButMe, me]
+      this.members = usersButMe
     } catch (error) {
       alert('メンバーがロードできませんでした！部屋一覧に戻ります。')
       this.$router.push('/rooms')
@@ -366,43 +358,36 @@ $contents-width: 390px;
   top: 0;
   left: 0;
   right: 0;
-  padding: 8px;
+  padding-top: var(--spacing-small);
+  padding-left: var(--spacing-medium);
+  padding-right: var(--spacing-medium);
+  padding-bottom: var(--spacing-small);
 
   display: flex;
+  align-items: center;
 
   color: #fff;
   opacity: 0.9;
 
-  .header-contents-right {
-    flex: 1;
-  }
-
-  .header-contents-left {
+  &__contents {
     display: flex;
+    align-items: center;
+    &--right {
+      flex: 1;
+    }
   }
-}
 
-.avatars {
-  position: relative;
-  display: flex;
+  &__title {
+    margin-left: var(--spacing-medium);
+    font-size: 2rem;
+    font-weight: bold;
+    transform: rotate(-10deg);
+  }
 
-  &__shadow {
-    position: absolute;
-    top: 10%;
-    bottom: -10px;
-    left: -10px;
-    right: 5px;
-    clip-path: polygon(
-      45% 45%,
-      50% 75%,
-      100% 0,
-      100% 80%,
-      35% 100%,
-      35% 83%,
-      0 100%
-    );
-
-    background-color: var(--color-app-black);
+  &__avatars {
+    position: relative;
+    display: flex;
+    margin-left: var(--spacing-medium);
   }
 }
 
