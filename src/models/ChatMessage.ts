@@ -1,3 +1,5 @@
+import { User } from '@/models/User'
+
 type ChatMessage = {
   id: string
   text: string
@@ -5,6 +7,7 @@ type ChatMessage = {
   createdAt: Date
   meta?: {
     isNextMyMessage: boolean
+    usersReadThisMessage: User[]
   }
 }
 

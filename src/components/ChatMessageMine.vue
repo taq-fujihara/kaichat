@@ -21,15 +21,27 @@
         <span class="created-at">{{ displayTime }}</span>
       </span>
     </div>
+
+    <div class="users-read-this-message">
+      <div
+        v-for="user in usersReadThisMessage"
+        :key="user.id"
+        class="users-read-this-message__user"
+      >
+        <img class="users-read-this-message__image" :src="user.photoUrl" />
+      </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator'
+import { User } from '@/models/User'
 
 @Component
 export default class ChatMessageMine extends Vue {
   @Prop() private text!: string
+  @Prop() private usersReadThisMessage!: User[]
   @Prop() private createdAt!: Date
   @Prop() private isNextMe!: boolean
 
@@ -197,5 +209,28 @@ export default class ChatMessageMine extends Vue {
   margin-top: var(--spacing-small);
   font-size: var(--font-size-xsmall);
   color: var(--color-app-gray);
+}
+
+.users-read-this-message {
+  position: absolute;
+  display: flex;
+
+  bottom: -10px;
+  left: -60px;
+
+  &__user {
+    &:not(:first-child) {
+      margin-left: var(--spacing-small);
+    }
+    overflow: hidden;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 4px solid var(--color-app-black);
+  }
+
+  &__image {
+    width: 30px;
+  }
 }
 </style>

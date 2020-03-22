@@ -102,6 +102,41 @@ export default class Repository {
     })
   }
 
+  static onSomeoneReadMessage(
+    roomId: string,
+    me: string,
+    callback: (read: { userId: string; messageId: string }[]) => void,
+  ) {
+    return db.collection(`/rooms/${roomId}/read`).onSnapshot(snapshot => {
+      const whoReadWhichMessage = new Array<{
+        userId: string
+        messageId: string
+      }>()
+
+      snapshot.forEach(doc => {
+        const data = doc.data()
+        if (!data) {
+          return
+        }
+        if (!data.readAt) {
+          return
+        }
+        if (doc.id === me) {
+          return
+        }
+
+        whoReadWhichMessage.push({
+          userId: doc.id,
+          messageId: data.messageId,
+        })
+      })
+
+      if (whoReadWhichMessage.length > 0) {
+        callback(whoReadWhichMessage)
+      }
+    })
+  }
+
   static async getRoom(id: string): Promise<Room> {
     const roomDoc = await db.doc(`/rooms/${id}`).get()
 
@@ -156,10 +191,23 @@ export default class Repository {
   }
 
   static async addMember(roomId: string, userId: string) {
-    const room = await db.doc(`/rooms/${roomId}`)
-    room.update({
+    await db.doc(`/rooms/${roomId}`).update({
       members: arrayUnion(userId),
     })
+  }
+
+  static async updateReadUntil(
+    roomId: string,
+    userId: string,
+    messageId: string,
+  ) {
+    await db.doc(`/rooms/${roomId}/read/${userId}`).set(
+      {
+        messageId,
+        readAt: serverTimestamp(),
+      },
+      { merge: true },
+    )
   }
 
   static onMessagesChange(

@@ -7,6 +7,7 @@
         :is-next-me="message.meta.isNextMyMessage"
         :key="message.id"
         :text="message.text"
+        :users-read-this-message="message.meta.usersReadThisMessage"
         :created-at="message.createdAt"
         :photoUrl="findPhotoUrl(message.userId)"
       />
@@ -127,10 +128,22 @@ async function cacheMessages(messages: ChatMessage[]) {
  *
  * @see {@link ChatMessage} for metadata contents
  */
-function addMetadataToMessages(messages: ChatMessage[], me: string): void {
+function addMetadataToMessages(
+  messages: ChatMessage[],
+  read: { user: User; messageId: string }[],
+  me: string,
+): void {
+  const map = new Map<string, User[]>()
+  for (const r of read) {
+    const users = map.get(r.messageId) || []
+    users.push(r.user)
+    map.set(r.messageId, users)
+  }
+
   messages.forEach((m, i, arr) => {
     m.meta = {
       isNextMyMessage: false,
+      usersReadThisMessage: map.get(m.id) || [],
     }
     const nextIndex = i + 1
     if (arr.length > nextIndex) {
@@ -151,13 +164,32 @@ function addMetadataToMessages(messages: ChatMessage[], me: string): void {
 export default class Messages extends Vue {
   @Prop({ type: String, required: true }) roomId!: string
 
+  // 送信メッセージ
   private message = ''
+
+  // メッセージ送信中フラグ
   private sendingMessage = false
+
+  // 部屋メンバー
   private members = new Array<User>()
+
+  private read = new Array<{ user: User; messageId: string }>()
+
+  // 表示メッセージ
   private messages = new Array<ChatMessage>()
-  private unsubscribe = () => {
+
+  // メッセージ監視をやめる
+  private unsubscribeMessages = () => {
     // do nothing
   }
+
+  // 部屋情報監視をやめる
+  private unsubscribeSomeoneRead = () => {
+    // do nothing
+  }
+
+  // 新着メッセージ更新回数
+  // 常に最新xx件の受信をするのではなく、定期敵に監視個数を減らす。
   private messageSubscribeCount = 0
 
   @Watch('messages')
@@ -215,11 +247,27 @@ export default class Messages extends Vue {
       return
     }
 
+    this.unsubscribeSomeoneRead = Repository.onSomeoneReadMessage(
+      this.roomId,
+      this.$store.state.user.id,
+      read => {
+        this.read = read.map(
+          r =>
+            ({
+              user: this.members.find(m => m.id === r.userId),
+              messageId: r.messageId,
+            } as { user: User; messageId: string }),
+        )
+        this.setMessages(this.messages)
+      },
+    )
+
     await Repository.saveUsersLastRoom(this.$store.state.user.id, this.roomId)
   }
 
   beforeDestroy() {
-    this.unsubscribe()
+    this.unsubscribeMessages()
+    this.unsubscribeSomeoneRead()
     if (cache) cache.close()
   }
 
@@ -245,21 +293,36 @@ export default class Messages extends Vue {
   }
 
   setMessages(messages: ChatMessage[]) {
-    addMetadataToMessages(messages, this.$store.state.user.id)
+    addMetadataToMessages(messages, this.read, this.$store.state.user.id)
     this.messages = messages
+  }
+
+  /**
+   * 自身の既読メッセージを更新する
+   */
+  async updateReadUntil(messageId: string) {
+    await Repository.updateReadUntil(
+      this.roomId,
+      this.$store.state.user.id,
+      messageId,
+    )
   }
 
   /**
    * メッセージをリポジトリからロードする
    */
   loadMessages() {
-    this.unsubscribe()
+    this.unsubscribeMessages()
 
-    this.unsubscribe = Repository.onMessagesChange(
+    this.unsubscribeMessages = Repository.onMessagesChange(
       this.roomId,
       async messages => {
         await cacheMessages(messages)
         this.setMessages(messages)
+
+        if (messages.length > 0) {
+          await this.updateReadUntil(messages.slice(-1)[0].id)
+        }
       },
     )
   }
@@ -268,9 +331,9 @@ export default class Messages extends Vue {
    * 指定のメッセージ以降のメッセージをリポジトリからロードする
    */
   async loadMessagesFrom(message: ChatMessage) {
-    this.unsubscribe()
+    this.unsubscribeMessages()
 
-    this.unsubscribe = await Repository.onMessagesChangeFrom(
+    this.unsubscribeMessages = await Repository.onMessagesChangeFrom(
       this.roomId,
       message.id,
       async newMessages => {
@@ -290,9 +353,15 @@ export default class Messages extends Vue {
           .limit(Repository.chatMessageLimit)
           .toArray()
 
+        // 最後からxx件キャッシュから取得しているが、並びが降順になってしまっているので、
+        // 画面表示上の昇順に直す。
         cachedMessages.reverse()
 
         this.setMessages(cachedMessages)
+
+        if (newMessages.length > 0) {
+          await this.updateReadUntil(newMessages.slice(-1)[0].id)
+        }
       },
     )
   }
@@ -351,7 +420,32 @@ export default class Messages extends Vue {
 
 <style lang="scss" scoped>
 $footer-height: 60px;
-$contents-width: 390px;
+$contents-width: 400px;
+
+.wrapper {
+  display: flex;
+  justify-content: center;
+
+  width: 100%;
+}
+
+.chat-messages {
+  width: 100%;
+  padding-top: var(--spacing-large);
+  padding-left: var(--spacing-medium);
+  padding-right: var(--spacing-medium);
+  padding-bottom: 80px;
+  // 自分のメッセージの傾きによって少し右にはみ出る場合がある。
+  // とりあえずはみ出たら非表示（行数が多いほど傾きが大きくなって出やすい傾向）
+  overflow-x: hidden;
+}
+@media screen and (min-width: $contents-width) {
+  .chat-messages {
+    width: $contents-width;
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
 
 .header {
   position: fixed;
@@ -391,18 +485,6 @@ $contents-width: 390px;
   }
 }
 
-.wrapper {
-  display: flex;
-  justify-content: center;
-}
-
-.chat-messages {
-  width: 100%;
-  max-width: $contents-width;
-  padding-top: var(--spacing-xlarge);
-  padding-bottom: calc(80px + 24px);
-}
-
 .footer-wrapper {
   position: fixed;
   bottom: 0;
@@ -418,8 +500,8 @@ $contents-width: 390px;
 
 .footer {
   width: 100%;
-  max-width: $contents-width;
   height: $footer-height;
+  padding-right: var(--spacing-medium);
 
   display: flex;
   align-items: center;
@@ -443,6 +525,12 @@ $contents-width: 390px;
       border: none;
       outline: none;
     }
+  }
+}
+@media screen and (min-width: $contents-width) {
+  .footer {
+    width: $contents-width;
+    padding-right: 0;
   }
 }
 </style>

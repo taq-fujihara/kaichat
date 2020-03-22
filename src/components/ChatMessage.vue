@@ -26,12 +26,23 @@
         <span class="created-at">{{ displayTime }}</span>
       </span>
     </div>
+
+    <div class="users-read-this-message">
+      <div
+        v-for="user in usersReadThisMessage"
+        :key="user.id"
+        class="users-read-this-message__user"
+      >
+        <img class="users-read-this-message__image" :src="user.photoUrl" />
+      </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator'
 import Avatar from '@/components/Avatar.vue'
+import { User } from '@/models/User'
 
 @Component({
   components: { Avatar },
@@ -41,6 +52,7 @@ export default class ChatMessage extends Vue {
   @Prop() private createdAt!: Date
   @Prop() private photoUrl!: string
   @Prop() private avatarBackgroundColor!: string
+  @Prop() private usersReadThisMessage!: User[]
   @Prop() private even!: boolean
   @Prop() private isNextMe!: boolean
 
@@ -70,10 +82,11 @@ export default class ChatMessage extends Vue {
   align-items: flex-start;
 
   margin-top: var(--spacing-medium);
-  margin-right: 64px;
+  margin-left: var(--spacing-small);
+  margin-right: var(--spacing-xlarge);
 
   &:nth-child(odd) {
-    margin-left: 16px;
+    margin-left: var(--spacing-mediumlarge);
 
     &:not(.is-next-me) {
       .guide,
@@ -204,5 +217,23 @@ export default class ChatMessage extends Vue {
   margin-top: var(--spacing-small);
   font-size: var(--font-size-xsmall);
   color: var(--color-app-gray);
+}
+
+.users-read-this-message {
+  position: absolute;
+  bottom: -10px;
+  // left: -60px;
+
+  &__user {
+    overflow: hidden;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 4px solid var(--color-app-black);
+  }
+
+  &__image {
+    width: 30px;
+  }
 }
 </style>
