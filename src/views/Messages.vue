@@ -414,7 +414,7 @@ $contents-width: 390px;
 .chat-messages {
   width: 100%;
   max-width: $contents-width;
-  padding-top: var(--spacing-large);
+  padding-top: var(--spacing-xlarge);
   padding-bottom: calc(80px + 24px);
 }
 

@@ -3,7 +3,7 @@
     <div class="guide-shadow"></div>
     <div class="guide"></div>
 
-    <div class="chat-message chat-message" @click="visibleTime = !visibleTime">
+    <div class="chat-message chat-message">
       <div class="chat-message__background chat-message__background"></div>
 
       <div class="chat-message__arrow-shadow"></div>
@@ -18,7 +18,7 @@
         >
           {{ t }}
         </span>
-        <span v-if="visibleTime" class="created-at">{{ displayTime }}</span>
+        <span class="created-at">{{ displayTime }}</span>
       </span>
     </div>
   </div>
@@ -33,9 +33,6 @@ export default class ChatMessageMine extends Vue {
   @Prop() private createdAt!: Date
   @Prop() private isNextMe!: boolean
 
-  // メッセージ時刻の表示非表示
-  visibleTime = false
-
   private get displayText(): Array<string> {
     if (!this.text) {
       return []
@@ -45,6 +42,9 @@ export default class ChatMessageMine extends Vue {
 
   private get displayTime() {
     // 1年前とかちょっと凝りたいけど、どうせ今は表示件数制限とかあるからいいや、、、
+    if (!this.createdAt) {
+      return '--/-- --:--'
+    }
     const month = this.createdAt.getMonth()
     const date = this.createdAt.getDate()
     const hour = this.createdAt.getHours()
@@ -62,7 +62,7 @@ export default class ChatMessageMine extends Vue {
   align-items: flex-start;
 
   margin-top: var(--spacing-medium);
-  margin-left: 64px;
+  margin-left: var(--spacing-xlarge);
 
   justify-content: flex-end;
 

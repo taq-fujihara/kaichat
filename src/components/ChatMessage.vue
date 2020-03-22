@@ -23,6 +23,7 @@
         >
           {{ t }}
         </span>
+        <span class="created-at">{{ displayTime }}</span>
       </span>
     </div>
   </div>
@@ -37,6 +38,7 @@ import Avatar from '@/components/Avatar.vue'
 })
 export default class ChatMessage extends Vue {
   @Prop() private text!: string
+  @Prop() private createdAt!: Date
   @Prop() private photoUrl!: string
   @Prop() private avatarBackgroundColor!: string
   @Prop() private even!: boolean
@@ -44,6 +46,18 @@ export default class ChatMessage extends Vue {
 
   private get displayText(): Array<string> {
     return this.text.split('\n')
+  }
+
+  private get displayTime() {
+    // 1年前とかちょっと凝りたいけど、どうせ今は表示件数制限とかあるからいいや、、、
+    if (!this.createdAt) {
+      return '--/-- --:--'
+    }
+    const month = this.createdAt.getMonth()
+    const date = this.createdAt.getDate()
+    const hour = this.createdAt.getHours()
+    const minute = this.createdAt.getMinutes()
+    return `${month}/${date} ${hour}:${minute}`
   }
 }
 </script>
@@ -182,5 +196,13 @@ export default class ChatMessage extends Vue {
   &__chat-text-line {
     display: block;
   }
+}
+
+.created-at {
+  display: block;
+  text-align: right;
+  margin-top: var(--spacing-small);
+  font-size: var(--font-size-xsmall);
+  color: var(--color-app-gray);
 }
 </style>
