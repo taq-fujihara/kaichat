@@ -45,7 +45,7 @@ $size-small: 35px;
 
   transform: skewX(10deg) rotate(2deg);
 
-  background-color: var(--color-app-black);
+  background-color: var(--app-color-black);
   color: #fff;
 
   &__background {

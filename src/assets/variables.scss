@@ -1,4 +1,12 @@
 :root {
+  --app-color-red: #cc0001;
+  --app-color-black: #000304;
+  --app-color-white: #ffffff;
+  --app-color-gray: #90A4AE;
+
+  --app-bg-color: var(--app-color-red);
+  --app-fg-color: var(--app-color-white);
+
   --spacing-small: 0.5rem;
   --spacing-medium: 1rem;
   --spacing-mediumlarge: 1.5rem;
@@ -7,7 +15,4 @@
 
   --font-size-small: small;
   --font-size-xsmall: xx-small;
-
-  --color-app-black: #000304;
-  --color-app-gray: #90A4AE;
 }

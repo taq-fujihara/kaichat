@@ -13,125 +13,145 @@
     </div>
 
     <div class="contents">
-      <ChatMessage
-        :text="chooseRoomText"
-        avatar-background-color="blue"
-        :is-next-me="true"
-      />
-      <ChatMessageMine>
-        <div class="rooms">
-          <div class="room" v-for="room in rooms" :key="room.id">
-            <a href="#" @click.prevent="viewMessages(room)">
-              {{ room.name }}
-            </a>
+      <div class="rooms">
+        <div class="room" v-for="room in rooms" :key="room.id">
+          <a href="#" @click.prevent="viewMessages(room)">
+            {{ room.name }}
+          </a>
+        </div>
+        <div>
+          <h2>
+            新しい部屋を作る
+          </h2>
+          <div class="field is-horizontal">
+            <div class="field-label is-normal">
+              <label class="label">名前</label>
+            </div>
+            <div class="field-body">
+              <div class="field">
+                <p class="control">
+                  <input
+                    class="input"
+                    placeholder="部屋の名前"
+                    v-model="newRoom.name"
+                  />
+                </p>
+              </div>
+            </div>
           </div>
-          <div v-if="rooms.length === 0">
-            部屋がない…
+
+          <div class="field-label is-normal">
+            <label class="label">メンバー</label>
+          </div>
+          <div class="members">
+            <div>
+              <UserProfile
+                v-for="member in newRoom.members"
+                :key="member.id"
+                :user="member"
+              />
+            </div>
+          </div>
+          <div class="field is-horizontal">
+            <div class="field-body">
+              <div class="field">
+                <div class="control">
+                  <app-input
+                    class="input"
+                    placeholder="追加するユーザー"
+                    :value.sync="newMember"
+                  />
+                  <app-button @click="addMember">
+                    追加
+                  </app-button>
+                </div>
+              </div>
+            </div>
           </div>
           <p>
-            <a href="#" @click.prevent="newRoomDialogOpen = true">
-              …新しく作る
-            </a>
+            <app-button @click="createRoom">
+              作成
+            </app-button>
           </p>
-          <div v-if="newRoomDialogOpen">
-            <p>
-              名前
-              <input type="text" v-model="newRoom.name" />
-            </p>
-            <p>
-              メンバー
-              <input type="text" v-model="newMember" />
-              <i class="fas fa-plus clickable" @click="addMember" />
-            </p>
-            <p>
-              <span v-for="member in newRoom.members" :key="member">
-                {{ member }}
-              </span>
-            </p>
-            <p>
-              <button
-                class="button is-small is-primary"
-                :disabled="!isNewRoomValid"
-                :class="{ 'is-loading': creatingRoom }"
-                @click="createRoom"
-              >
-                作成
-              </button>
-            </p>
-          </div>
         </div>
-      </ChatMessageMine>
+      </div>
     </div>
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import { Component, Vue } from 'vue-property-decorator'
+import UserProfile from '@/components/UserProfile.vue'
 import Repository from '@/repository'
-import ChatMessage from '@/components/ChatMessage.vue'
-import ChatMessageMine from '@/components/ChatMessageMine.vue'
+import { Room } from '@/models/Room'
 
-export default {
-  name: 'Rooms',
-  components: {
-    ChatMessage,
-    ChatMessageMine,
-  },
-  data() {
-    return {
-      rooms: [],
-      newRoomDialogOpen: false,
-      newMember: '',
-      newRoom: {
-        name: '',
-        members: [this.$store.state.user.id],
+@Component({
+  components: { UserProfile },
+})
+export default class Rooms extends Vue {
+  rooms: Room[] = []
+  newRoom = {
+    name: '',
+    members: [
+      // 自身
+      {
+        id: this.$store.state.user.id,
+        name: this.$store.state.user.name,
+        photoUrl: this.$store.state.user.photoUrl,
       },
-      creatingRoom: false,
-    }
-  },
-  computed: {
-    chooseRoomText() {
-      const index = Math.floor(Math.random() * 100) % 2
-      return ['部屋を選べ！', 'どの部屋にするのですか？'][index]
-    },
-    isNewRoomValid() {
-      return !!this.newRoom.name && this.newRoom.members.length > 0
-    },
-  },
-  methods: {
-    viewMessages(room) {
-      this.$router.push({
-        name: 'Messages',
-        params: { roomId: room.id },
-      })
-    },
-    addMember() {
-      if (!this.newMember) {
-        return
-      }
-      if (this.newRoom.members.includes(this.newMember)) {
-        return
-      }
-      this.newRoom.members = [...this.newRoom.members, this.newMember]
-      this.newMember = ''
-    },
-    async createRoom() {
-      this.creatingRoom = true
-      try {
-        await Repository.createRoom(
-          this.$store.state.user.id,
-          this.newRoom.name,
-          this.newRoom.members,
-        )
-      } catch (error) {
-        this.creatingRoom = false
-        throw new Error(error)
-      }
-      location.reload()
-    },
-  },
+    ],
+  }
+  newMember = ''
+  creatingRoom = false
+
   async mounted() {
     this.rooms = await Repository.getRooms(this.$store.state.user.id)
-  },
+  }
+
+  viewMessages(room: Room) {
+    this.$router.push({
+      name: 'Messages',
+      params: { roomId: room.id },
+    })
+  }
+
+  async addMember() {
+    if (!this.newMember) {
+      return
+    }
+    if (this.newRoom.members.map(m => m.id).includes(this.newMember)) {
+      return
+    }
+
+    const userId = this.newMember.trim()
+
+    const user = await Repository.getUserPublicData(userId)
+    this.newRoom.members = [...this.newRoom.members, user]
+
+    this.newMember = ''
+  }
+
+  async createRoom() {
+    // validate
+    if (!this.newRoom.name || this.newRoom.name.trim() === '') {
+      return
+    }
+
+    this.creatingRoom = true
+    try {
+      const roomId = await Repository.createRoom(
+        this.$store.state.user.id,
+        this.newRoom.name,
+        this.newRoom.members.map(m => m.id),
+      )
+
+      this.$router.push(`/rooms/${roomId}/messages`)
+    } catch (error) {
+      this.creatingRoom = false
+      alert('部屋の作成に失敗しました')
+      throw new Error(error)
+    }
+  }
 }
 </script>
 
@@ -165,8 +185,7 @@ $contents-width: 390px;
 }
 
 .contents {
-  width: 100%;
-  max-width: $contents-width;
+  margin-top: var(--spacing-xlarge);
 }
 
 .room {

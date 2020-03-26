@@ -82,6 +82,18 @@ export const getRoomMembers = functions.https.onCall(async (data, context) => {
 })
 
 /**
+ * ユーザーの公開情報取得
+ */
+export const getUserPublicData = functions.https.onCall(
+  async (data, context) => {
+    if (!context.auth) {
+      throw new Error('Requires login to call this function')
+    }
+    return getUser(data.userId)
+  },
+)
+
+/**
  * 新着メッセージ通知
  */
 export const sendNotification = functions.firestore

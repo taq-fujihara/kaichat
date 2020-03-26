@@ -99,7 +99,7 @@ export default class ChatMessage extends Vue {
   .guide,
   .guide-shadow {
     position: absolute;
-    background-color: var(--color-app-black);
+    background-color: var(--app-color-black);
   }
   .guide-shadow {
     opacity: 0.4;
@@ -166,14 +166,14 @@ export default class ChatMessage extends Vue {
     bottom: 8px;
     left: 6px;
     right: 8px;
-    background-color: var(--color-app-black);
+    background-color: var(--app-color-black);
     transform: skewX(5deg) rotate(1deg);
   }
 
   &__arrow,
   &__arrow-shadow {
     position: absolute;
-    background-color: var(--color-app-black);
+    background-color: var(--app-color-black);
 
     top: 10px;
     left: -25px;
@@ -216,7 +216,7 @@ export default class ChatMessage extends Vue {
   text-align: right;
   margin-top: var(--spacing-small);
   font-size: var(--font-size-xsmall);
-  color: var(--color-app-gray);
+  color: var(--app-color-gray);
 }
 
 .users-read-this-message {
@@ -229,7 +229,7 @@ export default class ChatMessage extends Vue {
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    border: 4px solid var(--color-app-black);
+    border: 4px solid var(--app-color-black);
   }
 
   &__image {

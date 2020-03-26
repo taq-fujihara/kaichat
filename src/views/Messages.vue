@@ -19,9 +19,6 @@
           class="fas fa-arrow-left fa-lg clickable"
           @click="$router.push('/rooms')"
         />
-        <div class="header__title">
-          SNS
-        </div>
         <div class="header__avatars">
           <Avatar
             v-for="user in members"
@@ -49,14 +46,14 @@
           ></textarea>
         </div>
         <div class="action">
-          <button
+          <app-button
             class="button is-primary"
             :class="{ 'is-loading': sendingMessage }"
             :disabled="message.length === 0"
             @click="publishMessage"
           >
             Send
-          </button>
+          </app-button>
         </div>
       </div>
     </div>
@@ -513,13 +510,6 @@ $contents-width: 400px;
     }
   }
 
-  &__title {
-    margin-left: var(--spacing-medium);
-    font-size: 2rem;
-    font-weight: bold;
-    transform: rotate(-10deg);
-  }
-
   &__avatars {
     position: relative;
     display: flex;
@@ -536,7 +526,7 @@ $contents-width: 400px;
   display: flex;
   justify-content: center;
 
-  background-color: var(--color-app-black);
+  background-color: var(--app-color-black);
   opacity: 0.9;
 }
 
@@ -562,7 +552,7 @@ $contents-width: 400px;
       margin-right: var(--spacing-medium);
 
       line-height: 25px;
-      background-color: var(--color-app-black);
+      background-color: var(--app-color-black);
       color: #fff;
       border: none;
       outline: none;

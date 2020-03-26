@@ -94,12 +94,13 @@ export default class Repository {
   }
 
   static async createRoom(owner: string, name: string, members: Array<string>) {
-    await db.collection('/rooms').add({
+    const roomDoc = await db.collection('/rooms').add({
       owner,
       name,
       members,
       createdAt: serverTimestamp(),
     })
+    return roomDoc.id
   }
 
   static onSomeoneReadMessage(
@@ -135,6 +136,15 @@ export default class Repository {
         callback(whoReadWhichMessage)
       }
     })
+  }
+
+  static async getUserPublicData(userId: string) {
+    const f = await functions.httpsCallable('getUserPublicData')({ userId })
+    return {
+      id: f.data.id as string,
+      name: f.data.name as string,
+      photoUrl: f.data.photoUrl as string,
+    }
   }
 
   static async getRoom(id: string): Promise<Room> {

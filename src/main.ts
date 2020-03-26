@@ -1,17 +1,24 @@
 import Vue, { VueConstructor } from 'vue'
-import * as firebase from 'firebase/app'
+
 import App from './App.vue'
 import './registerServiceWorker'
+import * as firebase from 'firebase/app'
 import { auth, messaging } from './firebaseApp'
 import router from './router'
 import store from './store'
 import Repository from './repository'
+// App common components
+import AppButton from './components/AppButton.vue'
+import AppInput from './components/AppInput.vue'
 
 import './assets/normalize.css'
 import './assets/variables.scss'
 import './assets/styles.scss'
 
 Vue.config.productionTip = false
+
+Vue.component('app-button', AppButton)
+Vue.component('app-input', AppInput)
 
 function renderApp(component: VueConstructor<Vue>): void {
   new Vue({
