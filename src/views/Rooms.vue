@@ -1,5 +1,5 @@
 <template>
-  <div class="wrapper">
+  <div>
     <div class="header">
       <div class="header-contents-right"></div>
       <div class="header-contents-left">
@@ -21,28 +21,15 @@
         </div>
         <div>
           <h2>
-            新しい部屋を作る
+            新しい部屋
           </h2>
-          <div class="field is-horizontal">
-            <div class="field-label is-normal">
-              <label class="label">名前</label>
-            </div>
-            <div class="field-body">
-              <div class="field">
-                <p class="control">
-                  <input
-                    class="input"
-                    placeholder="部屋の名前"
-                    v-model="newRoom.name"
-                  />
-                </p>
-              </div>
-            </div>
-          </div>
+          <p>
+            <app-input placeholder="部屋の名前" :value.sync="newRoom.name" />
+          </p>
 
-          <div class="field-label is-normal">
-            <label class="label">メンバー</label>
-          </div>
+          <p class="sub-text">
+            メンバー
+          </p>
           <div class="members">
             <div>
               <UserProfile
@@ -52,27 +39,24 @@
               />
             </div>
           </div>
-          <div class="field is-horizontal">
-            <div class="field-body">
-              <div class="field">
-                <div class="control">
-                  <app-input
-                    class="input"
-                    placeholder="追加するユーザー"
-                    :value.sync="newMember"
-                  />
-                  <app-button @click="addMember">
-                    追加
-                  </app-button>
-                </div>
-              </div>
+          <div class="input-with-buttons">
+            <div class="input-with-buttons__input">
+              <app-input
+                placeholder="追加するユーザー"
+                :value.sync="newMember"
+              />
+            </div>
+            <div class="input-with-buttons__buttons">
+              <app-button @click="addMember">
+                追加
+              </app-button>
             </div>
           </div>
-          <p>
+          <div class="actions">
             <app-button @click="createRoom">
-              作成
+              部屋を作る
             </app-button>
-          </p>
+          </div>
         </div>
       </div>
     </div>
@@ -156,13 +140,6 @@ export default class Rooms extends Vue {
 </script>
 
 <style lang="scss" scoped>
-$contents-width: 390px;
-
-.wrapper {
-  display: flex;
-  justify-content: center;
-}
-
 .header {
   position: fixed;
   top: 0;
@@ -193,5 +170,9 @@ $contents-width: 390px;
   &:not(:first-child) {
     padding-top: 16px;
   }
+}
+
+.actions {
+  margin-top: var(--spacing-medium);
 }
 </style>

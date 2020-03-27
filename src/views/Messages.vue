@@ -1,5 +1,5 @@
 <template>
-  <div class="wrapper">
+  <div>
     <div class="chat-messages">
       <component
         v-for="message in messages"
@@ -14,46 +14,49 @@
     </div>
 
     <div class="header">
-      <div class="header__contents header__contents--right">
-        <i
-          class="fas fa-arrow-left fa-lg clickable"
-          @click="$router.push('/rooms')"
-        />
-        <div class="header__avatars">
-          <Avatar
-            v-for="user in members"
-            :key="user.id"
-            :photo-url="user.photoUrl"
-            :is-small="true"
+      <div class="header__content">
+        <div class="header__content__right">
+          <i
+            class="fas fa-arrow-left fa-lg clickable"
+            @click="$router.push('/rooms')"
+          />
+          <div class="header__avatars">
+            <Avatar
+              v-for="user in members"
+              :key="user.id"
+              :photo-url="user.photoUrl"
+              :is-small="true"
+            />
+          </div>
+        </div>
+        <div class="header__content__left">
+          <i
+            class="fas fa-cog clickable fa-lg"
+            @click="$router.push(`/rooms/${roomId}`)"
           />
         </div>
       </div>
-      <div class="header__contents header__contents--left">
-        <i
-          class="fas fa-cog clickable fa-lg"
-          @click="$router.push(`/rooms/${roomId}`)"
-        />
-      </div>
     </div>
 
-    <div class="footer-wrapper">
-      <div class="footer">
-        <div class="text">
-          <textarea
-            placeholder="Jot something down"
-            v-model="message"
-            @keydown.enter="keyEnter"
-          ></textarea>
-        </div>
-        <div class="action">
-          <app-button
-            class="button is-primary"
-            :class="{ 'is-loading': sendingMessage }"
-            :disabled="message.length === 0"
-            @click="publishMessage"
-          >
-            Send
-          </app-button>
+    <div class="footer">
+      <div class="footer__content">
+        <div class="input-with-buttons">
+          <div class="input-with-buttons__input">
+            <app-input
+              placeholder="Jot something down"
+              :value.sync="message"
+              @keydown.enter="keyEnter"
+            />
+          </div>
+          <div class="input-with-buttons__buttons">
+            <app-button
+              :disabled="message.length === 0"
+              @click="publishMessage"
+              secondary
+            >
+              <i class="fas fa-paper-plane fa-lg" />
+            </app-button>
+          </div>
         </div>
       </div>
     </div>
@@ -460,53 +463,36 @@ export default class Messages extends Vue {
 </script>
 
 <style lang="scss" scoped>
-$footer-height: 60px;
-$contents-width: 400px;
-
-.wrapper {
-  display: flex;
-  justify-content: center;
-
-  width: 100%;
-}
-
 .chat-messages {
   width: 100%;
-  padding-top: var(--spacing-large);
-  padding-left: var(--spacing-medium);
-  padding-right: var(--spacing-medium);
-  padding-bottom: 80px;
+  padding-top: var(--app-header-height);
+  padding-bottom: calc(var(--app-footer-height) + var(--spacing-medium));
   // 自分のメッセージの傾きによって少し右にはみ出る場合がある。
   // とりあえずはみ出たら非表示（行数が多いほど傾きが大きくなって出やすい傾向）
   overflow-x: hidden;
-}
-@media screen and (min-width: $contents-width) {
-  .chat-messages {
-    width: $contents-width;
-  }
 }
 
 .header {
   position: fixed;
   top: 0;
+  height: var(--app-header-height);
   left: 0;
   right: 0;
-  padding-top: var(--spacing-small);
-  padding-left: var(--spacing-medium);
-  padding-right: var(--spacing-medium);
-  padding-bottom: var(--spacing-small);
 
   display: flex;
   align-items: center;
+  justify-content: center;
 
-  color: #fff;
-  opacity: 0.9;
-
-  &__contents {
+  &__content {
+    width: 100%;
+    max-width: var(--app-content-width);
     display: flex;
     align-items: center;
-    &--right {
+
+    &__right {
       flex: 1;
+      display: flex;
+      align-items: center;
     }
   }
 
@@ -517,52 +503,44 @@ $contents-width: 400px;
   }
 }
 
-.footer-wrapper {
+.footer {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-
-  display: flex;
-  justify-content: center;
+  height: var(--app-footer-height);
+  opacity: 0.9;
 
   background-color: var(--app-color-black);
-  opacity: 0.9;
-}
-
-.footer {
-  width: 100%;
-  height: $footer-height;
-  padding-right: var(--spacing-medium);
 
   display: flex;
   align-items: center;
+  justify-content: center;
 
-  .text {
-    flex: 1;
+  &__content {
+    width: 100%;
+    max-width: var(--app-content-width);
+    display: flex;
+    align-items: center;
 
-    margin-right: 8px;
+    .text {
+      flex: 1;
+      margin-right: 8px;
+      display: flex;
+      align-items: center;
 
-    textarea {
-      resize: none;
-      width: 100%;
-      height: 25px;
+      textarea {
+        resize: none;
+        width: 100%;
 
-      margin-left: var(--spacing-medium);
-      margin-right: var(--spacing-medium);
+        line-height: 25px;
+        background-color: transparent;
 
-      line-height: 25px;
-      background-color: var(--app-color-black);
-      color: #fff;
-      border: none;
-      outline: none;
+        // color: #fff;
+        border: none;
+        outline: none;
+      }
     }
-  }
-}
-@media screen and (min-width: $contents-width) {
-  .footer {
-    width: $contents-width;
-    padding-right: 0;
   }
 }
 </style>

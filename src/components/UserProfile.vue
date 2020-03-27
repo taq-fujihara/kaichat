@@ -26,7 +26,8 @@ export default class UserProfile extends Vue {
 <style lang="scss" scoped>
 .user-profile {
   display: flex;
-  margin-top: var(--spacing-medium);
+  padding-top: var(--spacing-medium);
+  padding-bottom: var(--spacing-medium);
 
   &__info {
     flex: 1;

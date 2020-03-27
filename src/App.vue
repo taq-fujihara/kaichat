@@ -1,6 +1,8 @@
 <template>
   <div id="app">
-    <router-view />
+    <div id="contents">
+      <router-view />
+    </div>
   </div>
 </template>
 
@@ -24,5 +26,18 @@ body {
   font-family: 'M PLUS 1p';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  position: relative;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+#contents {
+  position: relative;
+  width: 100%;
+  max-width: var(--app-content-width);
+  padding-left: var(--spacing-medium);
+  padding-right: var(--spacing-medium);
 }
 </style>

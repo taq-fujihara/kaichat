@@ -1,3 +1,22 @@
+.sub-text {
+  font-size: var(--font-size-small);
+}
+
 .clickable {
   cursor: pointer;
+}
+
+.input-with-buttons {
+  display: flex;
+  width: 100%;
+
+  &__input {
+    flex: 1;
+  }
+  &__buttons {
+    button,
+    .app-button {
+      margin-left: var(--spacing-small);
+    }
+  }
 }
