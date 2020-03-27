@@ -3,7 +3,7 @@
     class="app-button"
     :class="variableClasses"
     v-bind="$attrs"
-    v-on="listeners"
+    v-on="$listeners"
   >
     <slot />
   </button>
@@ -19,11 +19,6 @@ export default Vue.extend({
     },
   },
   computed: {
-    listeners() {
-      return {
-        ...this.$listeners,
-      }
-    },
     variableClasses() {
       return {
         'app-button--secondary': this.secondary,

@@ -15,9 +15,9 @@
     <div class="contents">
       <div class="rooms">
         <div class="room" v-for="room in rooms" :key="room.id">
-          <a href="#" @click.prevent="viewMessages(room)">
+          <app-link href="#" @click.prevent="viewMessages(room)">
             {{ room.name }}
-          </a>
+          </app-link>
         </div>
         <div>
           <h2>

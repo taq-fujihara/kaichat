@@ -5,7 +5,7 @@
     :value="value"
     :placeholder="placeholder"
     @input="$emit('update:value', $event.target.value)"
-    v-on="listeners"
+    v-on="$listeners"
   />
 </template>
 
@@ -18,13 +18,6 @@ export default Vue.extend({
     },
     placeholder: {
       type: String,
-    },
-  },
-  computed: {
-    listeners() {
-      return {
-        ...this.$listeners,
-      }
     },
   },
 })

@@ -10,6 +10,7 @@ import Repository from './repository'
 // App common components
 import AppButton from './components/AppButton.vue'
 import AppInput from './components/AppInput.vue'
+import AppLink from './components/AppLink.vue'
 
 import './assets/normalize.css'
 import './assets/variables.scss'
@@ -19,6 +20,7 @@ Vue.config.productionTip = false
 
 Vue.component('app-button', AppButton)
 Vue.component('app-input', AppInput)
+Vue.component('app-link', AppLink)
 
 function renderApp(component: VueConstructor<Vue>): void {
   new Vue({
