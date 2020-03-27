@@ -1,3 +1,8 @@
+.app-body {
+  margin-top: var(--app-header-height);
+  margin-bottom: var(--spacing-medium);
+}
+
 .sub-text {
   font-size: var(--font-size-small);
 }
@@ -17,6 +22,14 @@
     button,
     .app-button {
       margin-left: var(--spacing-small);
+    }
+  }
+}
+
+.buttons {
+  button, .app-button {
+    &:not(:first-child) {
+      margin-left: var(--spacing-medium);
     }
   }
 }

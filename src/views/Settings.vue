@@ -1,27 +1,19 @@
 <template>
   <div class="wrapper">
     <div class="contents">
-      <h2>
-        settings
-      </h2>
-
-      <div>
-        <div class="member">
-          <Avatar :photo-url="$store.state.user.photoUrl" />
-          <div class="member__info">
-            <div class="member__name">
-              {{ $store.state.user.name }}
-            </div>
-            <div class="member__id">ID: {{ $store.state.user.id }}</div>
-          </div>
+      <app-header title="Settings" :onBack="() => back()" />
+      <div class="app-body">
+        <UserProfile :user="user" />
+        <div class="buttons actions">
+          <app-button @click="clearCache">
+            <i class="fas fa-trash" />
+            Clear Cache
+          </app-button>
+          <app-button @click="signOut">
+            <i class="fas fa-sign-out-alt" />
+            Sign Out</app-button
+          >
         </div>
-      </div>
-      <div class="actions">
-        <a class="actions__link" href="#" @click.prevent="back">Back</a>
-        <a class="actions__link" href="#" @click.prevent="clearCache"
-          >Clear Cache</a
-        >
-        <a class="actions__link" href="#" @click.prevent="signOut">Sign Out</a>
       </div>
     </div>
   </div>
@@ -30,18 +22,26 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
 import Avatar from '@/components/Avatar.vue'
+import UserProfile from '@/components/UserProfile.vue'
 import { signOut } from '@/firebaseApp'
 import { clearAll } from '@/repository/MessagesCache'
+import { User } from '../models/User'
 
-@Component({ components: { Avatar } })
+@Component({ components: { Avatar, UserProfile } })
 export default class Settings extends Vue {
+  private get user(): User {
+    return this.$store.state.user
+  }
+
   back() {
     this.$router.push('/rooms')
   }
+
   async clearCache() {
     await clearAll()
     alert('キャッシュをクリアしました。')
   }
+
   async signOut() {
     await signOut()
   }
@@ -92,12 +92,5 @@ $contents-width: 390px;
 
 .actions {
   margin-top: var(--spacing-large);
-  color: #fff;
-
-  &__link {
-    &:not(:first-child) {
-      margin-left: var(--spacing-medium);
-    }
-  }
 }
 </style>

@@ -1,18 +1,15 @@
 <template>
   <div>
-    <div class="header">
-      <div class="header-contents-right"></div>
-      <div class="header-contents-left">
-        <div>
-          <i
-            class="fas fa-cog clickable fa-lg"
-            @click="$router.push('/settings')"
-          ></i>
-        </div>
-      </div>
-    </div>
+    <app-header title="Rooms">
+      <template v-slot:left>
+        <i
+          class="fas fa-cog clickable fa-lg"
+          @click="$router.push('/settings')"
+        ></i>
+      </template>
+    </app-header>
 
-    <div class="contents">
+    <div class="app-body">
       <div class="rooms">
         <div class="room" v-for="room in rooms" :key="room.id">
           <app-link href="#" @click.prevent="viewMessages(room)">
@@ -48,7 +45,7 @@
             </div>
             <div class="input-with-buttons__buttons">
               <app-button @click="addMember">
-                追加
+                Add
               </app-button>
             </div>
           </div>
@@ -140,31 +137,6 @@ export default class Rooms extends Vue {
 </script>
 
 <style lang="scss" scoped>
-.header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  padding: 8px;
-
-  display: flex;
-
-  color: #fff;
-  opacity: 0.9;
-
-  .header-contents-right {
-    flex: 1;
-  }
-
-  .header-contents-left {
-    display: flex;
-  }
-}
-
-.contents {
-  margin-top: var(--spacing-xlarge);
-}
-
 .room {
   font-size: large;
   &:not(:first-child) {

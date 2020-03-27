@@ -8,6 +8,7 @@ import router from './router'
 import store from './store'
 import Repository from './repository'
 // App common components
+import AppHeader from './components/AppHeader.vue'
 import AppButton from './components/AppButton.vue'
 import AppInput from './components/AppInput.vue'
 import AppLink from './components/AppLink.vue'
@@ -18,6 +19,7 @@ import './assets/styles.scss'
 
 Vue.config.productionTip = false
 
+Vue.component('app-header', AppHeader)
 Vue.component('app-button', AppButton)
 Vue.component('app-input', AppInput)
 Vue.component('app-link', AppLink)

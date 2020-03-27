@@ -1,5 +1,20 @@
 <template>
   <div>
+    <app-header :on-back="() => $router.push('/rooms')" transparent>
+      <Avatar
+        v-for="user in members"
+        :key="user.id"
+        :photo-url="user.photoUrl"
+        :is-small="true"
+      />
+      <template v-slot:left>
+        <i
+          class="fas fa-cog clickable fa-lg"
+          @click="$router.push(`/rooms/${roomId}`)"
+        />
+      </template>
+    </app-header>
+
     <div class="chat-messages">
       <component
         v-for="message in messages"
@@ -13,21 +28,10 @@
       />
     </div>
 
-    <div class="header">
+    <!-- <div class="header">
       <div class="header__content">
         <div class="header__content__right">
-          <i
-            class="fas fa-arrow-left fa-lg clickable"
-            @click="$router.push('/rooms')"
-          />
-          <div class="header__avatars">
-            <Avatar
-              v-for="user in members"
-              :key="user.id"
-              :photo-url="user.photoUrl"
-              :is-small="true"
-            />
-          </div>
+          
         </div>
         <div class="header__content__left">
           <i
@@ -37,7 +41,7 @@
         </div>
       </div>
     </div>
-
+ -->
     <div class="footer">
       <div class="footer__content">
         <div class="input-with-buttons">
@@ -472,36 +476,36 @@ export default class Messages extends Vue {
   overflow-x: hidden;
 }
 
-.header {
-  position: fixed;
-  top: 0;
-  height: var(--app-header-height);
-  left: 0;
-  right: 0;
+// .header {
+//   position: fixed;
+//   top: 0;
+//   height: var(--app-header-height);
+//   left: 0;
+//   right: 0;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
 
-  &__content {
-    width: 100%;
-    max-width: var(--app-content-width);
-    display: flex;
-    align-items: center;
+//   &__content {
+//     width: 100%;
+//     max-width: var(--app-content-width);
+//     display: flex;
+//     align-items: center;
 
-    &__right {
-      flex: 1;
-      display: flex;
-      align-items: center;
-    }
-  }
+//     &__right {
+//       flex: 1;
+//       display: flex;
+//       align-items: center;
+//     }
+//   }
 
-  &__avatars {
-    position: relative;
-    display: flex;
-    margin-left: var(--spacing-medium);
-  }
-}
+//   &__avatars {
+//     position: relative;
+//     display: flex;
+//     margin-left: var(--spacing-medium);
+//   }
+// }
 
 .footer {
   position: fixed;

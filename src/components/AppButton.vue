@@ -44,6 +44,10 @@ export default Vue.extend({
   border-bottom: solid 2px var(--app-color-gray);
   transition: background-color 0.2s ease-in-out, opacity 0.2s ease-in-out;
 
+  i {
+    margin-right: var(--spacing-small);
+  }
+
   &:focus {
     outline: 0;
   }
