@@ -27,14 +27,12 @@
           <p class="sub-text">
             メンバー
           </p>
-          <div class="members">
-            <div>
-              <UserProfile
-                v-for="member in newRoom.members"
-                :key="member.id"
-                :user="member"
-              />
-            </div>
+          <div>
+            <UserProfile
+              v-for="member in newRoom.members"
+              :key="member.id"
+              :user="member"
+            />
           </div>
           <div class="input-with-buttons">
             <div class="input-with-buttons__input">

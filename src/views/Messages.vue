@@ -1,6 +1,6 @@
 <template>
   <div>
-    <app-header :on-back="() => $router.push('/rooms')" transparent>
+    <app-header @back="$router.push('/rooms')" transparent>
       <Avatar
         v-for="user in members"
         :key="user.id"
@@ -28,20 +28,6 @@
       />
     </div>
 
-    <!-- <div class="header">
-      <div class="header__content">
-        <div class="header__content__right">
-          
-        </div>
-        <div class="header__content__left">
-          <i
-            class="fas fa-cog clickable fa-lg"
-            @click="$router.push(`/rooms/${roomId}`)"
-          />
-        </div>
-      </div>
-    </div>
- -->
     <div class="footer">
       <div class="footer__content">
         <div class="input-with-buttons">
@@ -458,10 +444,8 @@ export default class Messages extends Vue {
     this.sendingMessage = false
   }
 
-  keyEnter(e: KeyboardEvent) {
-    if (e.shiftKey) {
-      this.publishMessage()
-    }
+  keyEnter() {
+    this.publishMessage()
   }
 }
 </script>

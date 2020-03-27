@@ -1,52 +1,36 @@
 <template>
   <div>
-    <div class="header">
-      <i
-        class="fas fa-arrow-left fa-lg clickable"
-        @click="$router.push('/rooms')"
-      ></i>
-    </div>
+    <app-header
+      title="Room"
+      @back="$router.push(`/rooms/${roomId}/messages`)"
+    />
 
-    <div class="wrapper">
-      <div class="contents">
-        <div class="title">ID</div>
-        <div class="field">{{ roomId }}</div>
+    <div class="app-body">
+      <div class="title">部屋ID</div>
+      <div class="field">{{ roomId }}</div>
 
-        <div class="title">名前</div>
-        <div class="field">
-          <div class="control">
-            <input type="text" v-model="name" />
+      <app-input :value.sync="name" placeholder="部屋の名前" />
+
+      <p class="sub-text">
+        メンバー
+      </p>
+      <div>
+        <UserProfile
+          v-for="member in members"
+          :key="member.id"
+          :user="member"
+        />
+      </div>
+
+      <div class="add-member">
+        <div class="input-with-buttons">
+          <div class="input-with-buttons__input">
+            <app-input placeholder="追加するユーザー" :value.sync="newUserId" />
           </div>
-        </div>
-
-        <div class="title">メンバー</div>
-        <div class="field">
-          <div v-for="member in members" class="member" :key="member.id">
-            <Avatar :photo-url="member.photoUrl" />
-            <div class="member__info">
-              <div class="member__name">
-                {{ member.name }}
-                <span class="tag is-primary" v-if="member.id === owner"
-                  >Owner</span
-                >
-              </div>
-              <div class="member__id">ID: {{ member.id }}</div>
-            </div>
-            <!-- <div class="member__actions">
-            <i
-              class="fas fa-trash clickable"
-              @click="deleteMember(member.id)"
-            ></i>
-          </div> -->
-          </div>
-
-          <div class="add-member">
-            <input
-              type="text"
-              v-model="newUserId"
-              placeholder="追加するユーザーID"
-            />
-            <i class="fas fa-plus fa-lg clickable" @click="addMember"></i>
+          <div class="input-with-buttons__buttons">
+            <app-button @click="addMember">
+              Add
+            </app-button>
           </div>
         </div>
       </div>
@@ -56,13 +40,11 @@
 
 <script>
 import Repository from '@/repository'
-import Avatar from '@/components/Avatar.vue'
+import UserProfile from '@/components/UserProfile.vue'
 
 export default {
   name: 'Room',
-  components: {
-    Avatar,
-  },
+  components: { UserProfile },
   props: {
     roomId: {
       type: String,

@@ -3,9 +3,9 @@
     <div class="app-header__content">
       <div class="app-header__content__right">
         <i
-          v-if="onBack"
+          v-if="$listeners.back"
           class="app-header__back fas fa-arrow-left fa-lg clickable"
-          @click="onBack"
+          @click="$emit('back')"
         />
         <div class="app-header__title">
           {{ title }}
@@ -25,9 +25,6 @@ export default Vue.extend({
   props: {
     title: {
       type: String,
-    },
-    onBack: {
-      type: Function,
     },
     transparent: {
       type: Boolean,
@@ -57,7 +54,6 @@ export default Vue.extend({
   justify-content: center;
 
   background-color: var(--app-bg-color);
-  opacity: 0.8;
 
   z-index: 100;
 
@@ -71,6 +67,8 @@ export default Vue.extend({
     max-width: var(--app-content-width);
     display: flex;
     align-items: center;
+    padding-left: var(--spacing-medium);
+    padding-right: var(--spacing-medium);
 
     &__right {
       flex: 1;
