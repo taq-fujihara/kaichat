@@ -132,12 +132,24 @@ export const sendNotification = functions.firestore
         body: message,
       },
       webpush: {
+        headers: {
+          Urgency: 'high',
+        },
         notification: {
           icon: user.photoUrl,
+          tag: roomId,
+          badge: '/img/badges/badge-128x128.png',
+          renotify: true,
         },
         fcmOptions: {
           link: `/rooms/${roomId}/messages`,
         },
       },
+      // data: {
+      //   title: user.name,
+      //   body: message,
+      //   icon: user.photoUrl,
+      //   room: roomId,
+      // },
     })
   })
