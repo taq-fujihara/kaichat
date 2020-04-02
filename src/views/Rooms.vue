@@ -10,48 +10,48 @@
     </app-header>
 
     <div class="app-body">
-      <div class="rooms">
+      <h2>
+        参加している部屋
+      </h2>
+      <div>
         <div class="room" v-for="room in rooms" :key="room.id">
           <app-link href="#" @click.prevent="viewMessages(room)">
             {{ room.name }}
           </app-link>
         </div>
-        <div>
-          <h2>
-            新しい部屋
-          </h2>
-          <p>
-            <app-input placeholder="部屋の名前" :value.sync="newRoom.name" />
-          </p>
+      </div>
+      <div>
+        <h2>
+          新しい部屋
+        </h2>
+        <p>
+          <app-input placeholder="部屋の名前" :value.sync="newRoom.name" />
+        </p>
 
-          <p class="sub-text">
-            メンバー
-          </p>
-          <div>
-            <UserProfile
-              v-for="member in newRoom.members"
-              :key="member.id"
-              :user="member"
-            />
+        <p class="sub-text">
+          メンバー
+        </p>
+        <div>
+          <UserProfile
+            v-for="member in newRoom.members"
+            :key="member.id"
+            :user="member"
+          />
+        </div>
+        <div class="input-with-buttons">
+          <div class="input-with-buttons__input">
+            <app-input placeholder="追加するユーザー" :value.sync="newMember" />
           </div>
-          <div class="input-with-buttons">
-            <div class="input-with-buttons__input">
-              <app-input
-                placeholder="追加するユーザー"
-                :value.sync="newMember"
-              />
-            </div>
-            <div class="input-with-buttons__buttons">
-              <app-button @click="addMember">
-                Add
-              </app-button>
-            </div>
-          </div>
-          <div class="actions">
-            <app-button @click="createRoom">
-              部屋を作る
+          <div class="input-with-buttons__buttons">
+            <app-button @click="addMember">
+              Add
             </app-button>
           </div>
+        </div>
+        <div class="actions">
+          <app-button @click="createRoom">
+            部屋を作る
+          </app-button>
         </div>
       </div>
     </div>
