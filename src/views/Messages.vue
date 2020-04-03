@@ -460,37 +460,6 @@ export default class Messages extends Vue {
   overflow-x: hidden;
 }
 
-// .header {
-//   position: fixed;
-//   top: 0;
-//   height: var(--app-header-height);
-//   left: 0;
-//   right: 0;
-
-//   display: flex;
-//   align-items: center;
-//   justify-content: center;
-
-//   &__content {
-//     width: 100%;
-//     max-width: var(--app-content-width);
-//     display: flex;
-//     align-items: center;
-
-//     &__right {
-//       flex: 1;
-//       display: flex;
-//       align-items: center;
-//     }
-//   }
-
-//   &__avatars {
-//     position: relative;
-//     display: flex;
-//     margin-left: var(--spacing-medium);
-//   }
-// }
-
 .footer {
   position: fixed;
   bottom: 0;
@@ -510,6 +479,8 @@ export default class Messages extends Vue {
     max-width: var(--app-content-width);
     display: flex;
     align-items: center;
+    padding-left: var(--spacing-medium);
+    padding-right: var(--spacing-medium);
 
     .text {
       flex: 1;
@@ -524,7 +495,6 @@ export default class Messages extends Vue {
         line-height: 25px;
         background-color: transparent;
 
-        // color: #fff;
         border: none;
         outline: none;
       }
