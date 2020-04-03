@@ -54,23 +54,25 @@ export default class Repository {
     return CHAT_MESSAGE_LIMIT
   }
 
-  static async getUser(user: User) {
-    let userDoc = await db.doc(`/users/${user.id}`).get()
+  static async createUser(user: User) {
+    await db.doc(`/users/${user.id}`).set({
+      name: user.name,
+      photoUrl: user.photoUrl,
+      lastRoom: user.lastRoom,
+    })
+  }
+
+  static async getUser(userId: string): Promise<User | null> {
+    const userDoc = await db.doc(`/users/${userId}`).get()
 
     if (!userDoc.exists) {
-      await db.doc(`/users/${user.id}`).set({
-        name: user.name,
-        photoUrl: user.photoUrl,
-        lastRoom: user.lastRoom,
-      })
-
-      userDoc = await db.doc(`/users/${user.id}`).get()
+      return null
     }
 
     const userData = userDoc.data()
 
     if (!userData) {
-      throw new Error('Failed to find user document')
+      throw new Error('Failed to find user document data')
     }
 
     return {
