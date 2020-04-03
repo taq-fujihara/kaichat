@@ -60,13 +60,16 @@ import ChatMessageComponent from '@/components/ChatMessage.vue'
 import ChatMessageMine from '@/components/ChatMessageMine.vue'
 import Repository from '@/repository'
 import { MessagesCache } from '@/repository/MessagesCache'
+import { MembersCache } from '@/repository/MembersCache'
 import { User } from '@/models/User'
 import ChatMessage from '@/models/ChatMessage'
 
 // 何回メッセージの変更通知を受けたらハンドラを再取得するか
 const REFRESH_COUNT = 5
 
-let cache: MessagesCache
+let messageCache: MessagesCache
+let membersCache: MembersCache
+
 const photoUrlCache = new Map<string, string | null>()
 let readCache: { userId: string; messageId: string } | undefined
 
@@ -82,10 +85,10 @@ function scrollToBottom() {
  * @throws キャッシュマネージャーが初期化されていない場合、エラーとなる
  */
 async function getLastCachedMessage() {
-  if (!cache) {
-    throw new Error('cache is not activated yet')
+  if (!messageCache) {
+    throw new Error('messageCache is not activated yet')
   }
-  const m = await cache.messages
+  const m = await messageCache.messages
     .orderBy('createdAt')
     .reverse()
     .limit(1)
@@ -103,11 +106,11 @@ async function getLastCachedMessage() {
 async function cacheMessages(messages: ChatMessage[]) {
   let cachedCount = 0
   for (const message of messages) {
-    if (await cache.messages.get(message.id)) {
+    if (await messageCache.messages.get(message.id)) {
       // already cached
-      await cache.messages.put(message)
+      await messageCache.messages.put(message)
     } else {
-      await cache.messages.add(message)
+      await messageCache.messages.add(message)
       cachedCount++
     }
   }
@@ -231,10 +234,15 @@ export default class Messages extends Vue {
     }
 
     try {
+      const cachedUsers = await membersCache.users.toArray()
+      this.members = cachedUsers
+
       const users = await Repository.getRoomMembers(this.roomId)
       const usersButMe = users.filter(u => u.id !== this.$store.state.user.id)
       usersButMe.sort()
       this.members = usersButMe
+
+      await Promise.all(usersButMe.map(user => membersCache.users.put(user)))
     } catch (error) {
       alert('メンバーがロードできませんでした！部屋一覧に戻ります。')
       this.$router.push('/rooms')
@@ -267,7 +275,8 @@ export default class Messages extends Vue {
       'visibilitychange',
       this.handleVisibilityChange,
     )
-    if (cache) cache.close()
+    if (messageCache) messageCache.close()
+    if (membersCache) membersCache.close()
   }
 
   // ******************************************************
@@ -275,8 +284,10 @@ export default class Messages extends Vue {
   // ******************************************************
 
   initCache() {
-    if (cache) cache.close()
-    cache = new MessagesCache(this.roomId) // TODO cache this instance?
+    if (messageCache) messageCache.close()
+    if (membersCache) membersCache.close()
+    messageCache = new MessagesCache(this.roomId) // TODO messageCache this instance?
+    membersCache = new MembersCache(this.roomId) // TODO membersCache this instance?
   }
 
   /**
@@ -295,7 +306,7 @@ export default class Messages extends Vue {
   }
 
   async fetchMessagesFromCache(): Promise<ChatMessage[]> {
-    const messages = await cache.messages
+    const messages = await messageCache.messages
       .orderBy('createdAt')
       .reverse()
       .limit(Repository.chatMessageLimit)
@@ -371,7 +382,7 @@ export default class Messages extends Vue {
         // マージすることを考える。
         await cacheMessages(newMessages)
 
-        const cachedMessages = await cache.messages
+        const cachedMessages = await messageCache.messages
           .orderBy('createdAt')
           .reverse()
           .limit(Repository.chatMessageLimit)
@@ -409,9 +420,9 @@ export default class Messages extends Vue {
   }
 
   findPhotoUrl(userId: string) {
-    const cache = photoUrlCache.get(userId)
-    if (cache) {
-      return cache
+    const messageCache = photoUrlCache.get(userId)
+    if (messageCache) {
+      return messageCache
     }
     const users: User[] = this.members
     const user = users.find(m => m.id === userId)
