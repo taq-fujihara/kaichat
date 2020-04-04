@@ -234,15 +234,7 @@ export default class Messages extends Vue {
     }
 
     try {
-      const cachedUsers = await membersCache.users.toArray()
-      this.members = cachedUsers
-
-      const users = await Repository.getRoomMembers(this.roomId)
-      const usersButMe = users.filter(u => u.id !== this.$store.state.user.id)
-      usersButMe.sort()
-      this.members = usersButMe
-
-      await Promise.all(usersButMe.map(user => membersCache.users.put(user)))
+      this.loadMembers()
     } catch (error) {
       alert('メンバーがロードできませんでした！部屋一覧に戻ります。')
       this.$router.push('/rooms')
@@ -305,34 +297,6 @@ export default class Messages extends Vue {
     await this.updateReadUntil(readCache.messageId)
   }
 
-  async fetchMessagesFromCache(): Promise<ChatMessage[]> {
-    const messages = await messageCache.messages
-      .orderBy('createdAt')
-      .reverse()
-      .limit(Repository.chatMessageLimit)
-      .toArray()
-
-    messages.reverse()
-
-    return messages
-  }
-
-  setMessages(messages: ChatMessage[]) {
-    addMetadataToMessages(messages, this.read, this.$store.state.user.id)
-    this.messages = messages
-  }
-
-  /**
-   * 自身の既読メッセージを更新する
-   */
-  async updateReadUntil(messageId: string) {
-    await Repository.updateReadUntil(
-      this.roomId,
-      this.$store.state.user.id,
-      messageId,
-    )
-  }
-
   /**
    * メッセージをリポジトリからロードする
    */
@@ -359,6 +323,34 @@ export default class Messages extends Vue {
           await this.updateReadUntil(message.id)
         }
       },
+    )
+  }
+
+  async fetchMessagesFromCache(): Promise<ChatMessage[]> {
+    const messages = await messageCache.messages
+      .orderBy('createdAt')
+      .reverse()
+      .limit(Repository.chatMessageLimit)
+      .toArray()
+
+    messages.reverse()
+
+    return messages
+  }
+
+  setMessages(messages: ChatMessage[]) {
+    addMetadataToMessages(messages, this.read, this.$store.state.user.id)
+    this.messages = messages
+  }
+
+  /**
+   * 自身の既読メッセージを更新する
+   */
+  async updateReadUntil(messageId: string) {
+    await Repository.updateReadUntil(
+      this.roomId,
+      this.$store.state.user.id,
+      messageId,
     )
   }
 
@@ -409,6 +401,18 @@ export default class Messages extends Vue {
         }
       },
     )
+  }
+
+  async loadMembers() {
+    const cachedUsers = await membersCache.users.toArray()
+    this.members = cachedUsers
+
+    const users = await Repository.getRoomMembers(this.roomId)
+    const usersButMe = users.filter(u => u.id !== this.$store.state.user.id)
+    usersButMe.sort()
+    this.members = usersButMe
+
+    await Promise.all(usersButMe.map(user => membersCache.users.put(user)))
   }
 
   getMessageComponent(userId: string) {
