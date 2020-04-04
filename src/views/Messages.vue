@@ -438,24 +438,25 @@ export default class Messages extends Vue {
   }
 
   async publishMessage() {
-    if (!this.message) {
+    const message = this.message ? this.message.trim() : undefined
+    if (!message) {
       return
     }
 
+    this.message = ''
     this.sendingMessage = true
 
     try {
       await Repository.addMessage(
         this.roomId,
         this.$store.state.user.id,
-        this.message,
+        message,
       )
     } catch (error) {
       this.sendingMessage = false
       throw new Error(error)
     }
 
-    this.message = ''
     this.sendingMessage = false
   }
 
