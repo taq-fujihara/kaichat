@@ -4,9 +4,9 @@
     <div class="guide"></div>
 
     <div class="chat-message">
-      <div class="chat-message__arrow-shadow"></div>
+      <ChatMessageArrow inverse large class="chat-message__arrow--back" />
       <div class="chat-message__background-bottom"></div>
-      <div class="chat-message__arrow"></div>
+      <ChatMessageArrow white inverse class="chat-message__arrow--front" />
       <div class="chat-message__background-top"></div>
       <div class="chat-message__text">
         <span v-if="type === 'text'">
@@ -18,7 +18,7 @@
           </span>
           <img v-else class="chat-message__image" :src="imageUrl" />
         </div>
-        <div class="created-at">{{ displayTime }}</div>
+        <ChatMessageCreatedAt :created-at="createdAt" />
       </div>
     </div>
   </div>
@@ -26,10 +26,12 @@
 
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
+import ChatMessageArrow from '@/components/ChatMessageArrow.vue'
+import ChatMessageCreatedAt from '@/components/ChatMessageCreatedAt.vue'
 import { User } from '@/models/User'
 import Repository from '../repository'
 
-@Component
+@Component({ components: { ChatMessageArrow, ChatMessageCreatedAt } })
 export default class ChatMessageMine extends Vue {
   @Prop() private type!: 'text' | 'image'
   @Prop() private text!: string
@@ -46,15 +48,6 @@ export default class ChatMessageMine extends Vue {
     if (path) {
       this.imageUrl = await Repository.getImageUrl(path)
     }
-  }
-
-  private get displayTime() {
-    // 1年前とかちょっと凝りたいけど、どうせ今は表示件数制限とかあるからいいや、、、
-    const month = this.createdAt.getMonth()
-    const date = this.createdAt.getDate()
-    const hour = this.createdAt.getHours()
-    const minute = this.createdAt.getMinutes()
-    return `${month}/${date} ${hour}:${minute}`
   }
 }
 </script>
@@ -182,42 +175,16 @@ export default class ChatMessageMine extends Vue {
     );
   }
 
-  &__arrow-shadow,
   &__arrow {
     position: absolute;
-
-    // 反転
-    transform: scale(-1, 1);
-
     right: -16px;
-    clip-path: polygon(
-      0 63%,
-      53% 14%,
-      66% 44%,
-      100% 26%,
-      100% 78%,
-      34% 90%,
-      28% 49%
-    );
-  }
-  &__arrow-shadow {
-    top: 15px;
-    width: 35px;
-    height: 45px;
-    background-color: var(--app-color-black);
-  }
-  &__arrow {
-    top: 25px;
-    width: 35px;
-    height: 30px;
-    background-color: var(--app-color-white);
-  }
-}
 
-.created-at {
-  text-align: right;
-  margin-top: var(--spacing-small);
-  font-size: var(--font-size-xsmall);
-  color: var(--app-color-gray);
+    &--front {
+      top: 25px;
+    }
+    &--back {
+      top: 15px;
+    }
+  }
 }
 </style>

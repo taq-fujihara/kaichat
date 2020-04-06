@@ -10,9 +10,9 @@
     />
 
     <div class="chat-message">
-      <div class="chat-message__arrow-shadow"></div>
+      <ChatMessageArrow large white class="chat-message__arrow--back" />
       <div class="chat-message__background-bottom"></div>
-      <div class="chat-message__arrow"></div>
+      <ChatMessageArrow inverse class="chat-message__arrow--front" />
       <div class="chat-message__background-top"></div>
 
       <div class="chat-message__text">
@@ -25,7 +25,7 @@
           </span>
           <img v-else class="chat-message__image" :src="imageUrl" />
         </div>
-        <div class="created-at">{{ displayTime }}</div>
+        <ChatMessageCreatedAt :created-at="createdAt" />
       </div>
     </div>
 
@@ -43,12 +43,14 @@
 
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
+import ChatMessageArrow from '@/components/ChatMessageArrow.vue'
+import ChatMessageCreatedAt from '@/components/ChatMessageCreatedAt.vue'
 import Avatar from '@/components/Avatar.vue'
 import { User } from '@/models/User'
 import Repository from '@/repository'
 
 @Component({
-  components: { Avatar },
+  components: { Avatar, ChatMessageArrow, ChatMessageCreatedAt },
 })
 export default class ChatMessage extends Vue {
   @Prop() private type!: 'text' | 'image'
@@ -208,40 +210,17 @@ export default class ChatMessage extends Vue {
     );
   }
 
-  &__arrow-shadow,
   &__arrow {
     position: absolute;
-
     left: -16px;
-    clip-path: polygon(
-      0 63%,
-      53% 14%,
-      66% 44%,
-      100% 26%,
-      100% 78%,
-      34% 90%,
-      28% 49%
-    );
-  }
-  &__arrow-shadow {
-    top: 15px;
-    width: 35px;
-    height: 45px;
-    background-color: var(--app-color-white);
-  }
-  &__arrow {
-    top: 25px;
-    width: 35px;
-    height: 30px;
-    background-color: var(--app-color-black);
-  }
-}
 
-.created-at {
-  text-align: right;
-  margin-top: var(--spacing-small);
-  font-size: var(--font-size-xsmall);
-  color: var(--app-color-gray);
+    &--front {
+      top: 25px;
+    }
+    &--back {
+      top: 15px;
+    }
+  }
 }
 
 .users-read-this-message {
