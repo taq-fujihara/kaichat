@@ -1,6 +1,7 @@
 import { initializeApp, firestore } from 'firebase/app'
 import 'firebase/auth'
 import 'firebase/firestore'
+import 'firebase/storage'
 import 'firebase/functions'
 import 'firebase/messaging'
 
@@ -16,9 +17,9 @@ const app = initializeApp({
   measurementId: process.env.VUE_APP_MEASUREMENT_ID,
 })
 
-// Firestore
 const _firestore = app.firestore()
 const _functions = app.functions()
+const _storage = app.storage()
 
 if (process.env.VUE_APP_FIRESTORE_EMULATOR_HOST) {
   _firestore.settings({
@@ -34,6 +35,7 @@ if (process.env.VUE_APP_FIREBASE_FUNCTIONS_EMULATOR_URL) {
 
 export const auth = app.auth()
 export const db = _firestore
+export const storage = _storage.ref()
 export const functions = app.functions()
 export const serverTimestamp = firestore.FieldValue.serverTimestamp
 export const arrayUnion = firestore.FieldValue.arrayUnion
