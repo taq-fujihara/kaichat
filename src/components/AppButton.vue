@@ -45,7 +45,9 @@ export default Vue.extend({
   transition: background-color 0.2s ease-in-out, opacity 0.2s ease-in-out;
 
   i {
-    margin-right: var(--spacing-small);
+    &:not(:only-child) {
+      margin-right: var(--spacing-small);
+    }
   }
 
   &:focus {
