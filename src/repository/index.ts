@@ -1,4 +1,11 @@
-import { db, functions, serverTimestamp, arrayUnion } from '@/firebaseApp'
+import { v4 as uuid } from 'uuid'
+import {
+  db,
+  functions,
+  storage,
+  serverTimestamp,
+  arrayUnion,
+} from '@/firebaseApp'
 import ChatMessage from '@/models/ChatMessage'
 import { Room } from '@/models/Room'
 import { User } from '@/models/User'
@@ -41,7 +48,10 @@ function docToChatMessageModel(docRef: DocumentSnapshot): ChatMessage {
   }
   return {
     id: docRef.id,
+    type: data.type || 'text',
     text: data.text,
+    imagePath: data.imagePath,
+    imageThumbnailPath: data.imageThumbnailPath,
     userId: data.userId,
     createdAt: data.createdAt?.toDate(), // サーバー時刻はまだ入っていないことがある
   }
@@ -276,12 +286,16 @@ export default class Repository {
     roomId: string,
     userId: string,
     text: string,
-  ): Promise<void> {
-    await db.collection(`/rooms/${roomId}/messages`).add({
+    type?: 'text' | 'image',
+  ): Promise<string> {
+    const docRef = await db.collection(`/rooms/${roomId}/messages`).add({
       userId,
       text,
+      type: type || 'text',
       createdAt: serverTimestamp(),
     })
+
+    return docRef.id
   }
 
   static async setToken(userId: string, token: string): Promise<void> {
@@ -293,5 +307,38 @@ export default class Repository {
     } catch (error) {
       throw new Error(`Failed to save token: ${error}`)
     }
+  }
+
+  static async uploadImage(
+    roomId: string,
+    file: File,
+    docId: string,
+  ): Promise<string> {
+    const extension = file.name.slice(file.name.lastIndexOf('.'))
+
+    const ref = storage.child(`images/${roomId}/${docId}${extension}`)
+    const snap = await ref.put(file, {
+      customMetadata: {
+        roomId,
+        messageId: docId,
+      },
+    })
+
+    return snap.metadata.fullPath
+  }
+
+  static async setImagePath(
+    roomId: string,
+    messageId: string,
+    imagePath: string,
+  ) {
+    db.doc(`/rooms/${roomId}/messages/${messageId}`).update({
+      imagePath,
+    })
+  }
+
+  static async getImageUrl(imagePath: string): Promise<string> {
+    const imageRef = storage.child(imagePath)
+    return await imageRef.getDownloadURL()
   }
 }

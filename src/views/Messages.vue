@@ -21,7 +21,10 @@
         :is="getMessageComponent(message.userId)"
         :is-next-me="message.meta.isNextMyMessage"
         :key="message.id"
+        :type="message.type"
         :text="message.text"
+        :image-path="message.imagePath"
+        :image-thumbnail-path="message.imageThumbnailPath"
         :users-read-this-message="message.meta.usersReadThisMessage"
         :created-at="message.createdAt"
         :photoUrl="findPhotoUrl(message.userId)"
@@ -32,16 +35,21 @@
       <div class="footer__content">
         <div class="input-with-buttons">
           <div class="input-with-buttons__input">
-            <app-input
-              placeholder="Jot something down"
-              :value.sync="message"
-              @keydown.enter="keyEnter"
-            />
+            <div>
+              <app-input
+                placeholder="Jot something down"
+                :value.sync="message"
+                @keydown.enter="keyEnter"
+              />
+            </div>
           </div>
           <div class="input-with-buttons__buttons">
+            <app-button @click="$refs.file.click()">
+              <i class="fas fa-image fa-lg" />
+            </app-button>
             <app-button
               :disabled="message.length === 0"
-              @click="publishMessage"
+              @click="publishMessage(message, null)"
               secondary
             >
               <i class="fas fa-paper-plane fa-lg" />
@@ -50,6 +58,13 @@
         </div>
       </div>
     </div>
+    <input
+      hidden
+      ref="file"
+      @change="uploadImage($event.target.files)"
+      type="file"
+      accept="image/*"
+    />
   </div>
 </template>
 
@@ -407,6 +422,7 @@ export default class Messages extends Vue {
     const cachedUsers = await membersCache.users.toArray()
     this.members = cachedUsers
 
+    // TODO 変更検知にする
     const users = await Repository.getRoomMembers(this.roomId)
     const usersButMe = users.filter(u => u.id !== this.$store.state.user.id)
     usersButMe.sort()
@@ -437,8 +453,8 @@ export default class Messages extends Vue {
     return user.photoUrl
   }
 
-  async publishMessage() {
-    const message = this.message ? this.message.trim() : undefined
+  async publishMessage(text: string) {
+    const message = text ? text.trim() : ''
     if (!message) {
       return
     }
@@ -461,7 +477,36 @@ export default class Messages extends Vue {
   }
 
   keyEnter() {
-    this.publishMessage()
+    this.publishMessage(this.message)
+  }
+
+  private async uploadImage(files: FileList) {
+    if (files.length === 0) {
+      return
+    }
+
+    this.sendingMessage = true
+
+    try {
+      // アップロード画像をメッセージドキュメントのIDと一致させるために
+      // 取りあえず空のメッセージを作成する。
+      const messageId = await Repository.addMessage(
+        this.roomId,
+        this.$store.state.user.id,
+        '',
+        'image',
+      )
+
+      const file = files[0]
+      const path = await Repository.uploadImage(this.roomId, file, messageId)
+
+      await Repository.setImagePath(this.roomId, messageId, path)
+    } catch (error) {
+      this.sendingMessage = false
+      throw new Error(error)
+    }
+
+    this.sendingMessage = false
   }
 }
 </script>
@@ -482,7 +527,6 @@ export default class Messages extends Vue {
   left: 0;
   right: 0;
   height: var(--app-footer-height);
-  opacity: 0.9;
 
   background-color: var(--app-color-black);
 

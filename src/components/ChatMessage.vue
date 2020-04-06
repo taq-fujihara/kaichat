@@ -10,21 +10,23 @@
     />
 
     <div class="chat-message">
-      <div class="chat-message__background"></div>
-
       <div class="chat-message__arrow-shadow"></div>
+      <div class="chat-message__background-bottom"></div>
       <div class="chat-message__arrow"></div>
+      <div class="chat-message__background-top"></div>
 
-      <span class="chat-message__chat-text">
-        <span
-          class="chat-message__chat-text-line"
-          v-for="(t, i) in displayText"
-          :key="i"
-        >
-          {{ t }}
+      <div class="chat-message__text">
+        <span v-if="type === 'text'">
+          {{ text }}
         </span>
-        <span class="created-at">{{ displayTime }}</span>
-      </span>
+        <div v-if="type === 'image'">
+          <span v-if="!imageUrl">
+            Loading...
+          </span>
+          <img v-else class="chat-message__image" :src="imageUrl" />
+        </div>
+        <div class="created-at">{{ displayTime }}</div>
+      </div>
     </div>
 
     <div class="users-read-this-message">
@@ -40,15 +42,19 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator'
+import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 import Avatar from '@/components/Avatar.vue'
 import { User } from '@/models/User'
+import Repository from '@/repository'
 
 @Component({
   components: { Avatar },
 })
 export default class ChatMessage extends Vue {
+  @Prop() private type!: 'text' | 'image'
   @Prop() private text!: string
+  @Prop() private imagePath!: string
+  @Prop() private imageThumbnailPath!: string
   @Prop() private createdAt!: Date
   @Prop() private photoUrl!: string
   @Prop() private avatarBackgroundColor!: string
@@ -56,15 +62,17 @@ export default class ChatMessage extends Vue {
   @Prop() private even!: boolean
   @Prop() private isNextMe!: boolean
 
-  private get displayText(): Array<string> {
-    return this.text.split('\n')
+  private imageUrl: string | null = null
+
+  @Watch('imageThumbnailPath', { immediate: true })
+  async onThumbnail(path: string) {
+    if (path) {
+      this.imageUrl = await Repository.getImageUrl(path)
+    }
   }
 
   private get displayTime() {
     // 1年前とかちょっと凝りたいけど、どうせ今は表示件数制限とかあるからいいや、、、
-    if (!this.createdAt) {
-      return '--/-- --:--'
-    }
     const month = this.createdAt.getMonth()
     const date = this.createdAt.getDate()
     const hour = this.createdAt.getHours()
@@ -81,9 +89,6 @@ export default class ChatMessage extends Vue {
   display: flex;
   align-items: flex-start;
 
-  &:not(:first-child) {
-    margin-top: var(--spacing-medium);
-  }
   margin-left: var(--spacing-small);
   margin-right: var(--spacing-xlarge);
 
@@ -147,40 +152,67 @@ export default class ChatMessage extends Vue {
 }
 
 .chat-message {
-  display: inline-block;
   position: relative;
+  margin-left: -10px; // アバター画像に少し重ねる
 
-  min-width: 60px;
-  transform: skewX(-15deg) rotate(-2deg);
+  $chat-message-padding-top: 20px;
+  $chat-message-padding-left: 32px;
+  $chat-message-padding-right: 32px;
+  $chat-message-padding-bottom: 24px;
 
-  margin-top: 4px;
-  padding-top: 16px;
-  padding-bottom: 16px;
-  padding-left: 24px;
-  padding-right: 24px;
+  &__text {
+    position: relative;
+    min-width: 80px;
 
-  background-color: #fff;
-  color: #fff;
+    padding-top: $chat-message-padding-top;
+    padding-left: $chat-message-padding-left;
+    padding-right: $chat-message-padding-right;
+    padding-bottom: $chat-message-padding-bottom;
 
-  &__background {
-    position: absolute;
-    top: 4px;
-    bottom: 8px;
-    left: 6px;
-    right: 8px;
-    background-color: var(--app-color-black);
-    transform: skewX(5deg) rotate(1deg);
+    font-weight: bold;
+    font-size: var(--font-size-small);
+    color: var(--app-color-white);
+    word-break: break-all;
   }
 
-  &__arrow,
-  &__arrow-shadow {
+  &__image {
+    width: 100%;
+  }
+
+  &__background-bottom {
+    position: absolute;
+    background-color: var(--app-color-white);
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    clip-path: polygon(
+      12px 8px,
+      100% 0,
+      calc(100% - 22px) calc(100% - 8px),
+      0 100%
+    );
+  }
+  &__background-top {
     position: absolute;
     background-color: var(--app-color-black);
+    top: 8px;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    clip-path: polygon(
+      4px 4px,
+      100% 0,
+      calc(100% - 12px) calc(100% - 4px),
+      0 100%
+    );
+  }
 
-    top: 10px;
-    left: -25px;
-    height: 30px;
-    width: 35px;
+  &__arrow-shadow,
+  &__arrow {
+    position: absolute;
+
+    left: -16px;
     clip-path: polygon(
       0 63%,
       53% 14%,
@@ -191,30 +223,21 @@ export default class ChatMessage extends Vue {
       28% 49%
     );
   }
-
   &__arrow-shadow {
-    background-color: #fff;
-    top: 5px;
-    left: -30px;
-    height: 40px;
+    top: 15px;
+    width: 35px;
+    height: 45px;
+    background-color: var(--app-color-white);
   }
-
-  &__chat-text {
-    font-weight: bold;
-    font-size: small;
-    word-break: break-all;
-
-    display: inline-block;
-    transform: skewX(15deg) rotate(1deg);
-  }
-
-  &__chat-text-line {
-    display: block;
+  &__arrow {
+    top: 25px;
+    width: 35px;
+    height: 30px;
+    background-color: var(--app-color-black);
   }
 }
 
 .created-at {
-  display: block;
   text-align: right;
   margin-top: var(--spacing-small);
   font-size: var(--font-size-xsmall);
@@ -224,7 +247,6 @@ export default class ChatMessage extends Vue {
 .users-read-this-message {
   position: absolute;
   bottom: -10px;
-  // left: -60px;
 
   &__user {
     overflow: hidden;

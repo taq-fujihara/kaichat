@@ -3,60 +3,53 @@
     <div class="guide-shadow"></div>
     <div class="guide"></div>
 
-    <div class="chat-message chat-message">
-      <div class="chat-message__background chat-message__background"></div>
-
+    <div class="chat-message">
       <div class="chat-message__arrow-shadow"></div>
+      <div class="chat-message__background-bottom"></div>
       <div class="chat-message__arrow"></div>
-
-      <span class="chat-message__chat-text chat-message__chat-text">
-        <slot />
-        <span
-          class="chat-message__chat-text-line"
-          v-for="(t, i) in displayText"
-          :key="i"
-        >
-          {{ t }}
+      <div class="chat-message__background-top"></div>
+      <div class="chat-message__text">
+        <span v-if="type === 'text'">
+          {{ text }}
         </span>
-        <span class="created-at">{{ displayTime }}</span>
-      </span>
-    </div>
-
-    <div class="users-read-this-message">
-      <div
-        v-for="user in usersReadThisMessage"
-        :key="user.id"
-        class="users-read-this-message__user"
-      >
-        <img class="users-read-this-message__image" :src="user.photoUrl" />
+        <div v-if="type === 'image'">
+          <span v-if="!imageUrl">
+            Loading...
+          </span>
+          <img v-else class="chat-message__image" :src="imageUrl" />
+        </div>
+        <div class="created-at">{{ displayTime }}</div>
       </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator'
+import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 import { User } from '@/models/User'
+import Repository from '../repository'
 
 @Component
 export default class ChatMessageMine extends Vue {
+  @Prop() private type!: 'text' | 'image'
   @Prop() private text!: string
+  @Prop() private imagePath!: string
+  @Prop() private imageThumbnailPath!: string
   @Prop() private usersReadThisMessage!: User[]
   @Prop() private createdAt!: Date
   @Prop() private isNextMe!: boolean
 
-  private get displayText(): Array<string> {
-    if (!this.text) {
-      return []
+  private imageUrl: string | null = null
+
+  @Watch('imageThumbnailPath', { immediate: true })
+  async onThumbnail(path: string) {
+    if (path) {
+      this.imageUrl = await Repository.getImageUrl(path)
     }
-    return this.text.split('\n')
   }
 
   private get displayTime() {
     // 1年前とかちょっと凝りたいけど、どうせ今は表示件数制限とかあるからいいや、、、
-    if (!this.createdAt) {
-      return '--/-- --:--'
-    }
     const month = this.createdAt.getMonth()
     const date = this.createdAt.getDate()
     const hour = this.createdAt.getHours()
@@ -72,22 +65,10 @@ export default class ChatMessageMine extends Vue {
 
   display: flex;
   align-items: flex-start;
-
-  &:not(:first-of-type) {
-    margin-top: var(--spacing-medium);
-  }
-  margin-left: var(--spacing-xlarge);
-
   justify-content: flex-end;
 
-  &:nth-child(odd) {
-    &.is-next-me {
-      .guide,
-      .guide-shadow {
-        clip-path: polygon(23% 0, 100% 0, 65% 99%, 0 100%);
-      }
-    }
-  }
+  margin-top: var(--spacing-medium);
+  margin-left: var(--spacing-xlarge);
 
   .guide,
   .guide-shadow {
@@ -96,6 +77,15 @@ export default class ChatMessageMine extends Vue {
   }
   .guide-shadow {
     opacity: 0.4;
+  }
+
+  &:nth-child(odd) {
+    &.is-next-me {
+      .guide,
+      .guide-shadow {
+        clip-path: polygon(23% 0, 100% 0, 65% 99%, 0 100%);
+      }
+    }
   }
 
   &.is-next-me {
@@ -136,43 +126,70 @@ export default class ChatMessageMine extends Vue {
 }
 
 .chat-message {
-  display: inline-block;
   position: relative;
+  margin-right: 16px;
 
-  min-width: 60px;
+  $chat-message-padding-top: 20px;
+  $chat-message-padding-left: 32px;
+  $chat-message-padding-right: 32px;
+  $chat-message-padding-bottom: 24px;
 
-  transform: skewX(15deg);
+  &__text {
+    position: relative;
+    min-width: 80px;
 
-  margin-top: 4px;
-  margin-right: 24px;
-  padding-top: 16px;
-  padding-bottom: 16px;
-  padding-left: 24px;
-  padding-right: 24px;
+    padding-top: $chat-message-padding-top;
+    padding-left: $chat-message-padding-left;
+    padding-right: $chat-message-padding-right;
+    padding-bottom: $chat-message-padding-bottom;
 
-  background-color: var(--app-color-black);
-  color: var(--app-color-black);
-
-  &__background {
-    position: absolute;
-    top: 4px;
-    bottom: 8px;
-    left: 6px;
-    right: 8px;
-    background-color: #fff;
-    transform: skewX(-5deg);
+    font-weight: bold;
+    font-size: var(--font-size-small);
+    color: var(--app-color-black);
+    word-break: break-all;
   }
 
-  &__arrow,
-  &__arrow-shadow {
+  &__image {
+    width: 100%;
+  }
+
+  &__background-bottom {
     position: absolute;
-    background-color: #fff;
+    background-color: var(--app-color-black);
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    clip-path: polygon(
+      0 0,
+      calc(100% - 12px) 8px,
+      100% 100%,
+      22px calc(100% - 8px)
+    );
+  }
+  &__background-top {
+    position: absolute;
+    background-color: var(--app-color-white);
+    top: 8px;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    clip-path: polygon(
+      0 0,
+      calc(100% - 4px) 4px,
+      100% 100%,
+      12px calc(100% - 4px)
+    );
+  }
+
+  &__arrow-shadow,
+  &__arrow {
+    position: absolute;
+
+    // 反転
     transform: scale(-1, 1);
 
-    top: 10px;
-    right: -25px;
-    height: 30px;
-    width: 35px;
+    right: -16px;
     clip-path: polygon(
       0 63%,
       53% 14%,
@@ -183,56 +200,24 @@ export default class ChatMessageMine extends Vue {
       28% 49%
     );
   }
-
   &__arrow-shadow {
+    top: 15px;
+    width: 35px;
+    height: 45px;
     background-color: var(--app-color-black);
-    top: 5px;
-    right: -30px;
-    height: 40px;
   }
-
-  &__chat-text {
-    font-weight: bold;
-    font-size: small;
-    word-break: break-all;
-
-    display: inline-block;
-    transform: skewX(-15deg);
-  }
-
-  &__chat-text-line {
-    display: block;
+  &__arrow {
+    top: 25px;
+    width: 35px;
+    height: 30px;
+    background-color: var(--app-color-white);
   }
 }
 
 .created-at {
-  display: block;
   text-align: right;
   margin-top: var(--spacing-small);
   font-size: var(--font-size-xsmall);
   color: var(--app-color-gray);
-}
-
-.users-read-this-message {
-  position: absolute;
-  display: flex;
-
-  bottom: -10px;
-  left: -60px;
-
-  &__user {
-    &:not(:first-child) {
-      margin-left: var(--spacing-small);
-    }
-    overflow: hidden;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    border: 4px solid var(--app-color-black);
-  }
-
-  &__image {
-    width: 30px;
-  }
 }
 </style>
