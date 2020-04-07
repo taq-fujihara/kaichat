@@ -12,7 +12,7 @@
     <div class="chat-message">
       <ChatMessageArrow large white class="chat-message__arrow--back" />
       <div class="chat-message__background-bottom"></div>
-      <ChatMessageArrow inverse class="chat-message__arrow--front" />
+      <ChatMessageArrow class="chat-message__arrow--front" />
       <div class="chat-message__background-top"></div>
 
       <div class="chat-message__text">
