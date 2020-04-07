@@ -13,6 +13,10 @@
 import Vue from 'vue'
 export default Vue.extend({
   props: {
+    loading: {
+      type: Boolean,
+      default: false,
+    },
     secondary: {
       type: Boolean,
       default: false,
@@ -22,6 +26,7 @@ export default Vue.extend({
     variableClasses() {
       return {
         'app-button--secondary': this.secondary,
+        'is-loading': this.loading,
       }
     },
   },
@@ -73,6 +78,32 @@ $border-size: 3px;
 
   &--secondary {
     background-color: var(--app-color-red);
+  }
+
+  &.is-loading {
+    color: transparent;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: calc(50% - 1em / 2);
+      left: calc(50% - 1em / 2);
+      width: 1em;
+      height: 1em;
+      border-top: 2px solid var(--app-color-white);
+      border-left: 2px solid var(--app-color-white);
+      border-radius: 50%;
+      animation: spin 1s infinite linear;
+    }
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
   }
 }
 </style>
