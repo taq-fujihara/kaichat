@@ -91,6 +91,7 @@ export default class ChatMessage extends Vue {
   display: flex;
   align-items: flex-start;
 
+  margin-top: var(--spacing-medium);
   margin-left: var(--spacing-small);
   margin-right: var(--spacing-xlarge);
 
