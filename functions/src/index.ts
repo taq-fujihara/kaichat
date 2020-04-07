@@ -11,7 +11,7 @@ const db = admin.firestore()
 async function getUser(id: string) {
   const userDoc = await db.doc(`/users/${id}`).get()
   if (!userDoc.exists) {
-    throw new Error(`User not found: ${id}`)
+    throw new functions.https.HttpsError('not-found', id)
   }
 
   const userData = userDoc.data()
