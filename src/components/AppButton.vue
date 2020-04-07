@@ -29,20 +29,26 @@ export default Vue.extend({
 </script>
 
 <style lang="scss" scoped>
+$border-size: 3px;
+
 .app-button {
   box-sizing: border-box;
-  line-height: 1.5;
   position: relative;
   background-color: var(--app-color-black);
   color: var(--app-color-white);
-  border-radius: 4px;
-  border: none;
+  line-height: 1.5;
+
+  border-radius: 3px;
+
+  border: none; // cancel browser specific border
+  border-bottom: solid $border-size var(--app-color-gray);
+
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 16px;
   padding-right: 16px;
-  border-bottom: solid 2px var(--app-color-gray);
-  transition: background-color 0.2s ease-in-out, opacity 0.2s ease-in-out;
+
+  transition: transform 50ms ease-out;
 
   i {
     &:not(:only-child) {
@@ -54,14 +60,14 @@ export default Vue.extend({
     outline: 0;
   }
   &:active {
-    border-bottom: solid 2px transparent;
+    transform: translateY($border-size);
   }
   &:hover {
     cursor: pointer;
   }
   &:disabled {
     background-color: var(--app-color-gray);
-    opacity: 0.5;
+    opacity: 0.7;
     cursor: default;
   }
 
