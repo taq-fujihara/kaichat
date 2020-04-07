@@ -150,11 +150,18 @@ export default class Repository {
   }
 
   static async getUserPublicData(userId: string) {
-    const f = await functions.httpsCallable('getUserPublicData')({ userId })
-    return {
-      id: f.data.id as string,
-      name: f.data.name as string,
-      photoUrl: f.data.photoUrl as string,
+    try {
+      const f = await functions.httpsCallable('getUserPublicData')({ userId })
+      return {
+        id: f.data.id as string,
+        name: f.data.name as string,
+        photoUrl: f.data.photoUrl as string,
+      }
+    } catch (error) {
+      if (error.code === 'not-found') {
+        return undefined
+      }
+      throw new Error(error)
     }
   }
 
