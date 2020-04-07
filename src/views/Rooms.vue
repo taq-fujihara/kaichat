@@ -43,7 +43,7 @@
             <app-input placeholder="追加するユーザー" :value.sync="newMember" />
           </div>
           <div class="input-with-buttons__buttons">
-            <app-button @click="addMember">
+            <app-button @click="addMember" :loading="loading">
               Add
             </app-button>
           </div>
@@ -63,6 +63,7 @@ import { Component, Vue } from 'vue-property-decorator'
 import UserProfile from '@/components/UserProfile.vue'
 import Repository from '@/repository'
 import { Room } from '@/models/Room'
+import { Interceptor } from '@/utils/interceptor'
 
 @Component({
   components: { UserProfile },
@@ -82,6 +83,16 @@ export default class Rooms extends Vue {
   }
   newMember = ''
   creatingRoom = false
+  loading = false
+
+  loadingInterceptor = new Interceptor(
+    () => {
+      this.loading = true
+    },
+    () => {
+      this.loading = false
+    },
+  )
 
   async mounted() {
     this.rooms = await Repository.getRooms(this.$store.state.user.id)
@@ -95,23 +106,28 @@ export default class Rooms extends Vue {
   }
 
   async addMember() {
-    if (!this.newMember) {
-      return
-    }
-    if (this.newRoom.members.map(m => m.id).includes(this.newMember)) {
-      return
-    }
-
     const userId = this.newMember.trim()
 
-    const user = await Repository.getUserPublicData(userId)
-    this.newRoom.members = [...this.newRoom.members, user]
+    if (!userId) {
+      return
+    }
+    if (this.newRoom.members.map(m => m.id).includes(userId)) {
+      return
+    }
 
-    this.newMember = ''
+    const user = await this.loadingInterceptor.call(() => {
+      return Repository.getUserPublicData(userId)
+    })
+
+    if (!user) {
+      alert('ユーザーが見つかりませんでした')
+    } else {
+      this.newRoom.members = [...this.newRoom.members, user]
+      this.newMember = ''
+    }
   }
 
   async createRoom() {
-    // validate
     if (!this.newRoom.name || this.newRoom.name.trim() === '') {
       return
     }
@@ -130,6 +146,10 @@ export default class Rooms extends Vue {
       alert('部屋の作成に失敗しました')
       throw new Error(error)
     }
+  }
+
+  beforeDestroy() {
+    this.loadingInterceptor.dispose()
   }
 }
 </script>
