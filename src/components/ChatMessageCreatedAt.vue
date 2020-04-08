@@ -11,7 +11,7 @@ export default class ChatMessageCreatedAt extends Vue {
 
   private get displayText() {
     // 1年前とかちょっと凝りたいけど、どうせ今は表示件数制限とかあるからいいや、、、
-    const month = this.createdAt.getMonth()
+    const month = this.createdAt.getMonth() + 1
     const date = this.createdAt.getDate()
     const hour = this.createdAt.getHours()
     const minute = this.createdAt.getMinutes()
