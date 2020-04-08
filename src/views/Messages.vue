@@ -28,43 +28,81 @@
         :users-read-this-message="message.meta.usersReadThisMessage"
         :created-at="message.createdAt"
         :photoUrl="findPhotoUrl(message.userId)"
+        @click-image="handleImageClick"
       />
     </div>
 
     <div class="footer">
       <div class="footer__content">
-        <div class="input-with-buttons">
-          <div class="input-with-buttons__input">
-            <div>
-              <app-input
-                placeholder="Jot something down"
-                :value.sync="message"
-                @keydown.enter="keyEnter"
-              />
-            </div>
+        <div class="footer__content__left">
+          <div>
+            <app-input
+              placeholder="Jot something down"
+              :value.sync="message"
+              @keydown.enter="keyEnter"
+            />
           </div>
-          <div class="input-with-buttons__buttons">
-            <app-button @click="$refs.file.click()">
-              <i class="fas fa-image fa-lg" />
-            </app-button>
-            <app-button
-              :disabled="message.length === 0"
-              @click="publishMessage(message, null)"
-              secondary
-            >
-              <i class="fas fa-paper-plane fa-lg" />
-            </app-button>
+          <div class="footer__extra-actions">
+            <i
+              class="footer__extra-actions__icon fas fa-image clickable"
+              @click="$refs.fileselect.click()"
+            />
+            <i
+              class="footer__extra-actions__icon fas fa-camera clickable"
+              @click="$refs.camera.click()"
+            />
           </div>
+        </div>
+        <div class="footer__content__right">
+          <app-button
+            :disabled="message.length === 0"
+            @click="publishMessage(message, null)"
+            secondary
+          >
+            <i class="fas fa-paper-plane fa-lg" />
+          </app-button>
         </div>
       </div>
     </div>
+
+    <!-- 画像ビューアー（TODO コンポーネント化） -->
+    <div v-if="imageViewerActive" class="image-viewer">
+      <img
+        v-if="imageViewing"
+        :src="imageViewing"
+        class="image-viewer__image"
+      />
+      <i v-else class="image-viewer__spinner fas fa-spinner fa-2x" />
+      <div
+        class="image-viewer__close clickable"
+        @click="imageViewerActive = false"
+      >
+        <i class="fas fa-times fa-2x" />
+      </div>
+    </div>
+
+    <!-- 画像選択用input -->
     <input
       hidden
-      ref="file"
+      ref="fileselect"
       @change="uploadImage($event.target.files)"
       type="file"
       accept="image/*"
     />
+    <!-- 画像選択用input -->
+    <input
+      hidden
+      ref="camera"
+      @change="uploadImage($event.target.files)"
+      type="file"
+      accept="image/*"
+      capture
+    />
+
+    <!-- TODO コンポーネント化 -->
+    <div class="snackbar" v-if="uploadingImage">
+      画像をアップロードしています...
+    </div>
   </div>
 </template>
 
@@ -187,6 +225,11 @@ export default class Messages extends Vue {
   // 表示メッセージ
   private messages = new Array<ChatMessage>()
 
+  // 画像表示
+  private uploadingImage = false
+  private imageViewerActive = false
+  private imageViewing = ''
+
   // メッセージ監視をやめる
   private unsubscribeMessages = () => {
     // do nothing
@@ -275,13 +318,16 @@ export default class Messages extends Vue {
   }
 
   beforeDestroy() {
+    readCache = undefined
+
     this.unsubscribeMessages()
     this.unsubscribeSomeoneRead()
-    readCache = undefined
+
     document.removeEventListener(
       'visibilitychange',
       this.handleVisibilityChange,
     )
+
     if (messageCache) messageCache.close()
     if (membersCache) membersCache.close()
   }
@@ -485,28 +531,32 @@ export default class Messages extends Vue {
       return
     }
 
-    this.sendingMessage = true
+    this.uploadingImage = true
 
-    try {
-      // アップロード画像をメッセージドキュメントのIDと一致させるために
-      // 取りあえず空のメッセージを作成する。
-      const messageId = await Repository.addMessage(
-        this.roomId,
-        this.$store.state.user.id,
-        '',
-        'image',
-      )
+    const file = files[0]
 
-      const file = files[0]
-      const path = await Repository.uploadImage(this.roomId, file, messageId)
+    const dataUrl: string = await new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = e => {
+        if (!e.target) {
+          return reject()
+        }
+        resolve(e.target.result as string)
+      }
+      reader.readAsDataURL(file)
+    })
 
-      await Repository.setImagePath(this.roomId, messageId, path)
-    } catch (error) {
-      this.sendingMessage = false
-      throw new Error(error)
-    }
+    await Repository.uploadImage(this.roomId, file.name, dataUrl)
 
-    this.sendingMessage = false
+    this.uploadingImage = false
+  }
+
+  private async handleImageClick(imagePath: string) {
+    this.imageViewing = ''
+    await this.$nextTick() // 前表示していた画像表示が消えることを保証したい（これでいいのか？）
+
+    this.imageViewerActive = true
+    this.imageViewing = await Repository.getImageUrl(imagePath)
   }
 }
 </script>
@@ -559,6 +609,75 @@ export default class Messages extends Vue {
         outline: none;
       }
     }
+
+    &__left {
+      flex: 1;
+    }
+    &__right {
+      margin-left: var(--spacing-medium);
+    }
+  }
+
+  &__extra-actions {
+    &__icon {
+      &:not(:first-of-type) {
+        margin-left: var(--spacing-medium);
+      }
+    }
+  }
+}
+
+.image-viewer {
+  position: fixed;
+  z-index: 1000;
+
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background-color: var(--app-color-black);
+  background-size: cover;
+
+  &__image {
+    max-width: 100%;
+    max-height: 100%;
+  }
+
+  &__spinner {
+    animation: spin 1s infinite linear;
+  }
+
+  &__close {
+    position: absolute;
+    top: var(--spacing-medium);
+    right: var(--spacing-medium);
+  }
+}
+
+.snackbar {
+  position: fixed;
+  z-index: 500;
+
+  padding: var(--spacing-medium);
+
+  background-color: var(--app-color-black);
+  color: var(--app-color-white);
+
+  bottom: var(--spacing-medium);
+  right: var(--spacing-medium);
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
   }
 }
 </style>

@@ -23,7 +23,12 @@
           <span v-if="!imageUrl">
             Loading...
           </span>
-          <img v-else class="chat-message__image" :src="imageUrl" />
+          <img
+            v-else
+            class="chat-message__image clickable"
+            :src="imageUrl"
+            @click="$emit('click-image', imagePath)"
+          />
         </div>
         <ChatMessageCreatedAt :created-at="createdAt" />
       </div>

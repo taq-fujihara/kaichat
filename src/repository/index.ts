@@ -317,20 +317,26 @@ export default class Repository {
 
   static async uploadImage(
     roomId: string,
-    file: File,
-    docId: string,
-  ): Promise<string> {
-    const extension = file.name.slice(file.name.lastIndexOf('.'))
-
-    const ref = storage.child(`images/${roomId}/${docId}${extension}`)
-    const snap = await ref.put(file, {
-      customMetadata: {
-        roomId,
-        messageId: docId,
-      },
+    filename: string,
+    fileContent: string,
+  ) {
+    await functions.httpsCallable('addImageMessage')({
+      roomId,
+      filename,
+      fileContent,
     })
 
-    return snap.metadata.fullPath
+    // const extension = file.name.slice(file.name.lastIndexOf('.'))
+
+    // const ref = storage.child(`images/${roomId}/${docId}${extension}`)
+    // const snap = await ref.put(file, {
+    //   customMetadata: {
+    //     roomId,
+    //     messageId: docId,
+    //   },
+    // })
+
+    // return snap.metadata.fullPath
   }
 
   static async setImagePath(
