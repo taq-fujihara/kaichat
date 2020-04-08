@@ -51,6 +51,7 @@ function docToChatMessageModel(docRef: DocumentSnapshot): ChatMessage {
     text: data.text,
     imagePath: data.imagePath,
     imageThumbnailPath: data.imageThumbnailPath,
+    thumbnailBase64: data.thumbnailBase64,
     userId: data.userId,
     createdAt: data.createdAt?.toDate(), // サーバー時刻はまだ入っていないことがある
   }

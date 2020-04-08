@@ -188,6 +188,7 @@ export const addImageMessage = functions.https.onCall(async (data, context) => {
   }
 
   const match = dataUrl.match(/^data:([A-Za-z-+/]+);base64,(.+)$/)
+  const base64Header = `data:${match ? match[1] : 'image/jpeg'};base64,`
   const fileContent = match ? match[2] : null
 
   if (!fileContent) {
@@ -207,6 +208,7 @@ export const addImageMessage = functions.https.onCall(async (data, context) => {
 
   // generate a thumbnail
   await spawn('convert', [tempFilePath, '-thumbnail', '300x300>', tempFilePath])
+  const thumbnailBase64 = fs.readFileSync(tempFilePath).toString('base64')
 
   // upload the thumbnail
   await storage.bucket().upload(tempFilePath, {
@@ -221,6 +223,7 @@ export const addImageMessage = functions.https.onCall(async (data, context) => {
     userId,
     imagePath: originalStorageFilePath,
     imageThumbnailPath: thumbnailStorageFilePath,
+    thumbnailBase64: base64Header + thumbnailBase64,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
   })
 })

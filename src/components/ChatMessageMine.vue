@@ -30,7 +30,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
+import { Component, Prop, Vue } from 'vue-property-decorator'
 import ChatMessageArrow from '@/components/ChatMessageArrow.vue'
 import ChatMessageCreatedAt from '@/components/ChatMessageCreatedAt.vue'
 import { User } from '@/models/User'
@@ -42,16 +42,18 @@ export default class ChatMessageMine extends Vue {
   @Prop() private text!: string
   @Prop() private imagePath!: string
   @Prop() private imageThumbnailPath!: string
+  @Prop() private thumbnailBase64!: string
   @Prop() private usersReadThisMessage!: User[]
   @Prop() private createdAt!: Date
   @Prop() private isNextMe!: boolean
 
   private imageUrl: string | null = null
 
-  @Watch('imageThumbnailPath', { immediate: true })
-  async onThumbnail(path: string) {
-    if (path) {
-      this.imageUrl = await Repository.getImageUrl(path)
+  async created() {
+    if (this.thumbnailBase64) {
+      this.imageUrl = this.thumbnailBase64
+    } else if (this.imageThumbnailPath) {
+      this.imageUrl = await Repository.getImageUrl(this.imageThumbnailPath)
     }
   }
 }

@@ -25,6 +25,7 @@
         :text="message.text"
         :image-path="message.imagePath"
         :image-thumbnail-path="message.imageThumbnailPath"
+        :thumbnail-base64="message.thumbnailBase64"
         :users-read-this-message="message.meta.usersReadThisMessage"
         :created-at="message.createdAt"
         :photoUrl="findPhotoUrl(message.userId)"

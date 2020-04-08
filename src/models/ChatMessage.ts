@@ -6,6 +6,7 @@ type ChatMessage = {
   text?: string
   imagePath?: string
   imageThumbnailPath?: string
+  thumbnailBase64?: string
   userId: string
   createdAt: Date
   meta?: {

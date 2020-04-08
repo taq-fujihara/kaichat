@@ -47,7 +47,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
+import { Component, Prop, Vue } from 'vue-property-decorator'
 import ChatMessageArrow from '@/components/ChatMessageArrow.vue'
 import ChatMessageCreatedAt from '@/components/ChatMessageCreatedAt.vue'
 import Avatar from '@/components/Avatar.vue'
@@ -62,6 +62,7 @@ export default class ChatMessage extends Vue {
   @Prop() private text!: string
   @Prop() private imagePath!: string
   @Prop() private imageThumbnailPath!: string
+  @Prop() private thumbnailBase64!: string
   @Prop() private createdAt!: Date
   @Prop() private photoUrl!: string
   @Prop() private avatarBackgroundColor!: string
@@ -71,20 +72,12 @@ export default class ChatMessage extends Vue {
 
   private imageUrl: string | null = null
 
-  @Watch('imageThumbnailPath', { immediate: true })
-  async onThumbnail(path: string) {
-    if (path) {
-      this.imageUrl = await Repository.getImageUrl(path)
+  async created() {
+    if (this.thumbnailBase64) {
+      this.imageUrl = this.thumbnailBase64
+    } else if (this.imageThumbnailPath) {
+      this.imageUrl = await Repository.getImageUrl(this.imageThumbnailPath)
     }
-  }
-
-  private get displayTime() {
-    // 1年前とかちょっと凝りたいけど、どうせ今は表示件数制限とかあるからいいや、、、
-    const month = this.createdAt.getMonth()
-    const date = this.createdAt.getDate()
-    const hour = this.createdAt.getHours()
-    const minute = this.createdAt.getMinutes()
-    return `${month}/${date} ${hour}:${minute}`
   }
 }
 </script>
