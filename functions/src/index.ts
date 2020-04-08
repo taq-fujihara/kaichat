@@ -1,5 +1,6 @@
 import * as functions from 'firebase-functions'
 import * as admin from 'firebase-admin'
+import { v4 as uuid } from 'uuid'
 import { spawn } from 'child-process-promise'
 import * as path from 'path'
 import * as os from 'os'
@@ -7,6 +8,7 @@ import * as fs from 'fs'
 
 admin.initializeApp()
 const db = admin.firestore()
+const storage = admin.storage()
 
 async function getUser(id: string) {
   const userDoc = await db.doc(`/users/${id}`).get()
@@ -149,80 +151,76 @@ export const sendNotification = functions.firestore
           link: `/rooms/${roomId}/messages`,
         },
       },
-      // data: {
-      //   title: user.name,
-      //   body: message,
-      //   icon: user.photoUrl,
-      //   room: roomId,
-      // },
     })
   })
 
-export const generateThumbnail = functions.storage
-  .bucket('')
-  .object()
-  .onFinalize(async object => {
-    const THUMBNAIL_PREFIX = '_thumb_'
+export const addImageMessage = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'signin required')
+  }
 
-    console.log('upload', object)
+  const THUMBNAIL_PREFIX = '__thumb__'
+  const userId = context.auth.uid
+  const roomId = data.roomId
+  const originalFilename = data.filename
+  const tmpImageId = uuid()
+  const dataUrl: string = data.fileContent
+  const tempFilePath = path.join(os.tmpdir(), originalFilename)
+  const originalStorageFilePath = `images/${roomId}/${tmpImageId}/${originalFilename}`
+  const thumbnailStorageFilePath = `images/${roomId}/${tmpImageId}/${THUMBNAIL_PREFIX}${originalFilename}`
 
-    const fileBucket = object.bucket // The Storage bucket that contains the file.
-    const filePath = object.name // File path in the bucket.
-    const contentType = object.contentType // File content type.
-    // const metageneration = object.metageneration // Number of times metadata has been generated. New objects have a value of 1.
+  const roomDoc = await db.doc(`/rooms/${roomId}`).get()
+  const room = roomDoc.data()
+  if (!room) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      `Room not found: ${roomId}`,
+    )
+  }
 
-    if (!filePath) {
-      console.log('file path not found.')
-      return
-    }
+  const roomMembers: string[] = room.members
 
-    // Exit if this is triggered on a file that is not an image.
-    if (contentType && !contentType.startsWith('image/')) {
-      console.log('This is not an image.')
-      return
-    }
+  if (!roomMembers.includes(userId)) {
+    throw new functions.https.HttpsError(
+      'permission-denied',
+      `You are not allowed to fetch members of this room: ${roomId}`,
+    )
+  }
 
-    // Get the file name.
-    const fileName = path.basename(filePath)
-    // Exit if the image is already a thumbnail.
-    if (fileName.startsWith(THUMBNAIL_PREFIX)) {
-      console.log('Already a Thumbnail.')
-      return
-    }
-    // Download file from bucket.
-    const bucket = admin.storage().bucket(fileBucket)
-    const tempFilePath = path.join(os.tmpdir(), fileName)
-    const metadata = {
-      contentType: contentType,
-    }
-    await bucket.file(filePath).download({ destination: tempFilePath })
-    console.log('Image downloaded locally to', tempFilePath)
-    // Generate a thumbnail using ImageMagick.
-    await spawn('convert', [
-      tempFilePath,
-      '-thumbnail',
-      '200x200>',
-      tempFilePath,
-    ])
-    console.log('Thumbnail created at', tempFilePath)
-    // We add a prefix to thumbnails file name. That's where we'll upload the thumbnail.
-    const thumbFileName = `${THUMBNAIL_PREFIX}${fileName}`
-    const thumbFilePath = path.join(path.dirname(filePath), thumbFileName)
-    // Uploading the thumbnail.
-    await bucket.upload(tempFilePath, {
-      destination: thumbFilePath,
-      metadata,
-    })
-    // Once the thumbnail has been uploaded delete the local file to free up disk space.
-    fs.unlinkSync(tempFilePath)
+  const match = dataUrl.match(/^data:([A-Za-z-+/]+);base64,(.+)$/)
+  const fileContent = match ? match[2] : null
 
-    // update message document
-    const meta = object.metadata
-    if (meta) {
-      console.log(`update document; ${meta.roomId} ${meta.messageId}`)
+  if (!fileContent) {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'Invalid file content',
+    )
+  }
 
-      await db.doc(`/rooms/${meta.roomId}/messages/${meta.messageId}`).update({
-        imageThumbnailPath: thumbFilePath,
-      })
-    }
+  // save image
+  fs.writeFileSync(tempFilePath, fileContent, 'base64')
+
+  // upload the original
+  await storage.bucket().upload(tempFilePath, {
+    destination: originalStorageFilePath,
   })
+
+  // generate a thumbnail
+  await spawn('convert', [tempFilePath, '-thumbnail', '300x300>', tempFilePath])
+
+  // upload the thumbnail
+  await storage.bucket().upload(tempFilePath, {
+    destination: thumbnailStorageFilePath,
+  })
+
+  fs.unlinkSync(tempFilePath)
+
+  // add chat message
+  await db.collection(`/rooms/${data.roomId}/messages`).add({
+    type: 'image',
+    userId,
+    imagePath: originalStorageFilePath,
+    imageThumbnailPath: thumbnailStorageFilePath,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  })
+})
