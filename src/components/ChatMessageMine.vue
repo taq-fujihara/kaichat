@@ -26,6 +26,16 @@
         <ChatMessageCreatedAt :created-at="createdAt" />
       </div>
     </div>
+
+    <div class="users-read-this-message">
+      <div
+        v-for="user in usersReadThisMessage"
+        :key="user.id"
+        class="users-read-this-message__user"
+      >
+        <img class="users-read-this-message__image" :src="user.photoUrl" />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -192,6 +202,24 @@ export default class ChatMessageMine extends Vue {
     &--back {
       top: 15px;
     }
+  }
+}
+
+.users-read-this-message {
+  position: absolute;
+  left: -20px;
+  bottom: -10px;
+
+  &__user {
+    overflow: hidden;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 4px solid var(--app-color-black);
+  }
+
+  &__image {
+    width: 30px;
   }
 }
 </style>
