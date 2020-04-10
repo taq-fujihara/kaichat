@@ -29,7 +29,7 @@
         :users-read-this-message="message.meta.usersReadThisMessage"
         :created-at="message.createdAt"
         :photoUrl="findPhotoUrl(message.userId)"
-        @click-image="handleImageClick"
+        @click-image="handleImageClick(message)"
       />
     </div>
 
@@ -117,6 +117,7 @@ import { MessagesCache } from '@/repository/MessagesCache'
 import { MembersCache } from '@/repository/MembersCache'
 import { User } from '@/models/User'
 import ChatMessage from '@/models/ChatMessage'
+import { shrinkImage } from '@/utils/image'
 
 // 何回メッセージの変更通知を受けたらハンドラを再取得するか
 const REFRESH_COUNT = 5
@@ -535,29 +536,18 @@ export default class Messages extends Vue {
     this.uploadingImage = true
 
     const file = files[0]
-
-    const dataUrl: string = await new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = e => {
-        if (!e.target) {
-          return reject()
-        }
-        resolve(e.target.result as string)
-      }
-      reader.readAsDataURL(file)
-    })
-
-    await Repository.uploadImage(this.roomId, file.name, dataUrl)
+    const shrinked = await shrinkImage(file)
+    await Repository.uploadImage(this.roomId, file.name, shrinked)
 
     this.uploadingImage = false
   }
 
-  private async handleImageClick(imagePath: string) {
+  private async handleImageClick(message: ChatMessage) {
     this.imageViewing = ''
     await this.$nextTick() // 前表示していた画像表示が消えることを保証したい（これでいいのか？）
 
     this.imageViewerActive = true
-    this.imageViewing = await Repository.getImageUrl(imagePath)
+    this.imageViewing = await Repository.getImageUrl(this.roomId, message.id)
   }
 }
 </script>
@@ -662,15 +652,19 @@ export default class Messages extends Vue {
 
 .snackbar {
   position: fixed;
-  z-index: 500;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 
-  padding: var(--spacing-medium);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--app-footer-height);
+
+  z-index: 500;
 
   background-color: var(--app-color-black);
   color: var(--app-color-white);
-
-  bottom: var(--spacing-medium);
-  right: var(--spacing-medium);
 }
 
 @keyframes spin {

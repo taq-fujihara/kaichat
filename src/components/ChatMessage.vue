@@ -52,7 +52,6 @@ import ChatMessageArrow from '@/components/ChatMessageArrow.vue'
 import ChatMessageCreatedAt from '@/components/ChatMessageCreatedAt.vue'
 import Avatar from '@/components/Avatar.vue'
 import { User } from '@/models/User'
-import Repository from '@/repository'
 
 @Component({
   components: { Avatar, ChatMessageArrow, ChatMessageCreatedAt },
@@ -75,8 +74,6 @@ export default class ChatMessage extends Vue {
   async created() {
     if (this.thumbnailBase64) {
       this.imageUrl = this.thumbnailBase64
-    } else if (this.imageThumbnailPath) {
-      this.imageUrl = await Repository.getImageUrl(this.imageThumbnailPath)
     }
   }
 }

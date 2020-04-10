@@ -44,7 +44,6 @@ import { Component, Prop, Vue } from 'vue-property-decorator'
 import ChatMessageArrow from '@/components/ChatMessageArrow.vue'
 import ChatMessageCreatedAt from '@/components/ChatMessageCreatedAt.vue'
 import { User } from '@/models/User'
-import Repository from '../repository'
 
 @Component({ components: { ChatMessageArrow, ChatMessageCreatedAt } })
 export default class ChatMessageMine extends Vue {
@@ -62,8 +61,6 @@ export default class ChatMessageMine extends Vue {
   async created() {
     if (this.thumbnailBase64) {
       this.imageUrl = this.thumbnailBase64
-    } else if (this.imageThumbnailPath) {
-      this.imageUrl = await Repository.getImageUrl(this.imageThumbnailPath)
     }
   }
 }

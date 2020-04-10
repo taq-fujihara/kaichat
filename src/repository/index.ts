@@ -326,18 +326,6 @@ export default class Repository {
       filename,
       fileContent,
     })
-
-    // const extension = file.name.slice(file.name.lastIndexOf('.'))
-
-    // const ref = storage.child(`images/${roomId}/${docId}${extension}`)
-    // const snap = await ref.put(file, {
-    //   customMetadata: {
-    //     roomId,
-    //     messageId: docId,
-    //   },
-    // })
-
-    // return snap.metadata.fullPath
   }
 
   static async setImagePath(
@@ -350,8 +338,11 @@ export default class Repository {
     })
   }
 
-  static async getImageUrl(imagePath: string): Promise<string> {
-    const imageRef = storage.child(imagePath)
-    return await imageRef.getDownloadURL()
+  static async getImageUrl(roomId: string, messageId: string): Promise<string> {
+    const functionResult = await functions.httpsCallable('getImagePublicUrl')({
+      roomId,
+      messageId,
+    })
+    return functionResult.data
   }
 }
