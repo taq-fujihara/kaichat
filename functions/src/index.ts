@@ -1,12 +1,20 @@
 import * as functions from 'firebase-functions'
 import * as admin from 'firebase-admin'
 import { v4 as uuid } from 'uuid'
+import { utc } from 'moment'
 import { spawn } from 'child-process-promise'
 import * as path from 'path'
 import * as os from 'os'
 import * as fs from 'fs'
 
-admin.initializeApp()
+const adminConfig = JSON.parse(process.env.FIREBASE_CONFIG || '{}')
+adminConfig.credential = admin.credential.cert({
+  projectId: process.env.GCLOUD_PROJECT,
+  privateKey: functions.config().app.privatekey,
+  clientEmail: functions.config().app.clientemail,
+})
+admin.initializeApp(adminConfig)
+
 const db = admin.firestore()
 const storage = admin.storage()
 
@@ -130,12 +138,26 @@ export const sendNotification = functions.firestore
       return
     }
 
-    // 通知の送信
+    let imageUrl
+    if (data?.type === 'image') {
+      const thumbnailPath = data?.imageThumbnailPath
+      const file = storage.bucket().file(thumbnailPath)
+      imageUrl = (
+        await file.getSignedUrl({
+          action: 'read',
+          expires: utc()
+            .add(1, 'hours')
+            .format(),
+        })
+      )[0]
+    }
+
     await admin.messaging().sendMulticast({
       tokens: recipientTokens,
       notification: {
         title: user.name,
         body: message,
+        imageUrl: imageUrl,
       },
       webpush: {
         headers: {
@@ -201,6 +223,9 @@ export const addImageMessage = functions.https.onCall(async (data, context) => {
   // save image
   fs.writeFileSync(tempFilePath, fileContent, 'base64')
 
+  // adjust
+  await spawn('convert', [tempFilePath, '-auto-orient', tempFilePath])
+
   // upload the original
   await storage.bucket().upload(tempFilePath, {
     destination: originalStorageFilePath,
@@ -208,6 +233,7 @@ export const addImageMessage = functions.https.onCall(async (data, context) => {
 
   // generate a thumbnail
   await spawn('convert', [tempFilePath, '-thumbnail', '300x300>', tempFilePath])
+
   const thumbnailBase64 = fs.readFileSync(tempFilePath).toString('base64')
 
   // upload the thumbnail
@@ -227,3 +253,56 @@ export const addImageMessage = functions.https.onCall(async (data, context) => {
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
   })
 })
+
+export const getImagePublicUrl = functions.https.onCall(
+  async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'signin required')
+    }
+
+    const userId = context.auth.uid
+    const roomId = data.roomId
+    const messageId = data.messageId
+
+    const roomDoc = await db.doc(`/rooms/${roomId}`).get()
+    const roomData = roomDoc.data()
+
+    if (!roomData) {
+      throw new functions.https.HttpsError('internal', 'room data not found')
+    }
+
+    if (!roomData.members.includes(userId)) {
+      throw new functions.https.HttpsError(
+        'permission-denied',
+        'you are not a member of the room',
+      )
+    }
+
+    const messageDoc = await db
+      .doc(`/rooms/${roomId}/messages/${messageId}`)
+      .get()
+    const messageData = messageDoc.data()
+
+    if (!messageData) {
+      throw new functions.https.HttpsError('internal', 'message data not found')
+    }
+
+    if (!messageData.imagePath) {
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        'image is not attached to this document',
+      )
+    }
+
+    const file = storage.bucket().file(messageData.imagePath)
+
+    return (
+      await file.getSignedUrl({
+        action: 'read',
+        expires: utc()
+          .add(10, 'minutes')
+          .format(),
+      })
+    )[0]
+  },
+)
