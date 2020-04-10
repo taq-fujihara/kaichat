@@ -14,6 +14,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "blueimp-load-image": "^2.31.0",
     "core-js": "^3.6.4",
     "dexie": "^2.0.4",
     "firebase": "^7.9.1",
@@ -28,6 +29,7 @@
   },
   "devDependencies": {
     "@firebase/testing": "^0.16.11",
+    "@types/blueimp-load-image": "^2.23.6",
     "@types/jest": "^24.0.19",
     "@typescript-eslint/eslint-plugin": "^2.18.0",
     "@typescript-eslint/parser": "^2.18.0",
