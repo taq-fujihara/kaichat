@@ -39,7 +39,9 @@ function initMessaging(
   messaging: firebase.messaging.Messaging,
   userId: string,
 ) {
-  messaging.usePublicVapidKey(process.env.VUE_APP_MESSAGING_PUBLIC_KEY)
+  if (process.env.VUE_APP_MESSAGING_PUBLIC_KEY) {
+    messaging.usePublicVapidKey(process.env.VUE_APP_MESSAGING_PUBLIC_KEY)
+  }
   messaging.requestPermission().then(() => {
     messaging.getToken().then(token => Repository.setToken(userId, token))
   })
