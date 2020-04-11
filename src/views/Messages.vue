@@ -110,19 +110,14 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
+import { Component, Prop, Vue } from 'vue-property-decorator'
 import Avatar from '@/components/Avatar.vue'
 import ChatMessageComponent from '@/components/ChatMessage.vue'
 import ChatMessageMine from '@/components/ChatMessageMine.vue'
 import Repository from '@/repository'
-import { MessagesCache } from '@/repository/MessagesCache'
-import { MembersCache } from '@/repository/MembersCache'
 import { User } from '@/models/User'
 import ChatMessage from '@/models/ChatMessage'
 import { shrinkImage } from '@/utils/image'
-
-let messageCache: MessagesCache
-let membersCache: MembersCache
 
 const photoUrlCache = new Map<string, string | null>()
 let readCache: { userId: string; messageId: string } | undefined
@@ -131,44 +126,6 @@ function scrollToBottom() {
   const elem = document.documentElement
   const bottom = elem.scrollHeight - elem.clientHeight
   window.scroll(0, bottom)
-}
-
-/**
- * キャッシュされている最後のメッセージを取得する
- *
- * @throws キャッシュマネージャーが初期化されていない場合、エラーとなる
- */
-async function getLastCachedMessage() {
-  if (!messageCache) {
-    throw new Error('messageCache is not activated yet')
-  }
-  const m = await messageCache.messages
-    .orderBy('createdAt')
-    .reverse()
-    .limit(1)
-    .toArray()
-
-  return m.length > 0 ? m[0] : undefined
-}
-
-/**
- * メッセージをキャッシュする
- *
- * 既にキャッシュされているメッセージは内容を上書きする
- * TODO もうキャッシュの内容が変わるようなことはないのでは？？
- */
-async function cacheMessages(messages: ChatMessage[]) {
-  let cachedCount = 0
-  for (const message of messages) {
-    if (await messageCache.messages.get(message.id)) {
-      // already cached
-      await messageCache.messages.put(message)
-    } else {
-      await messageCache.messages.add(message)
-      cachedCount++
-    }
-  }
-  return cachedCount
 }
 
 /**
@@ -256,14 +213,7 @@ export default class Messages extends Vue {
 
   async mounted() {
     try {
-      // 初期表示で早くなるようとりあえずキャッシュからメッセージをロードしてしまう
-      const messagesFromCache = await this.fetchMessagesFromCache()
-      this.setMessages(messagesFromCache)
-
-      // この部分は後続の処理を待たずに描画させる
-      await this.$nextTick()
-
-      this.loadMessages()
+      await this.loadMessages()
       scrollToBottom()
     } catch (error) {
       alert('メッセージがロードできませんでした！部屋一覧に戻ります。')
@@ -307,9 +257,6 @@ export default class Messages extends Vue {
       'visibilitychange',
       this.handleVisibilityChange,
     )
-
-    if (messageCache) messageCache.close()
-    if (membersCache) membersCache.close()
   }
 
   // ******************************************************
@@ -317,10 +264,7 @@ export default class Messages extends Vue {
   // ******************************************************
 
   initCache() {
-    if (messageCache) messageCache.close()
-    if (membersCache) membersCache.close()
-    messageCache = new MessagesCache(this.roomId) // TODO messageCache this instance?
-    membersCache = new MembersCache(this.roomId) // TODO membersCache this instance?
+    Repository.initCache(this.roomId)
   }
 
   /**
@@ -341,16 +285,16 @@ export default class Messages extends Vue {
   /**
    * メッセージをリポジトリからロードする
    */
-  loadMessages() {
+  async loadMessages() {
     this.unsubscribeMessages()
 
-    this.unsubscribeMessages = Repository.onMessagesChange(
+    this.unsubscribeMessages = await Repository.onMessagesChange(
       this.roomId,
       async messages => {
         const oldLastMessageId =
           this.messages.length > 0 ? this.messages.slice(-1)[0].id : undefined
 
-        await cacheMessages(messages)
+        // await cacheMessages(messages)
         this.setMessages(messages)
 
         const newLastMessageId =
@@ -377,18 +321,6 @@ export default class Messages extends Vue {
     )
   }
 
-  async fetchMessagesFromCache(): Promise<ChatMessage[]> {
-    const messages = await messageCache.messages
-      .orderBy('createdAt')
-      .reverse()
-      .limit(Repository.chatMessageLimit)
-      .toArray()
-
-    messages.reverse()
-
-    return messages
-  }
-
   setMessages(messages: ChatMessage[]) {
     addMetadataToMessages(messages, this.read, this.$store.state.user.id)
     this.messages = messages
@@ -406,16 +338,10 @@ export default class Messages extends Vue {
   }
 
   async loadMembers() {
-    const cachedUsers = await membersCache.users.toArray()
-    this.members = cachedUsers
-
-    // TODO 変更検知にする
     const users = await Repository.getRoomMembers(this.roomId)
     const usersButMe = users.filter(u => u.id !== this.$store.state.user.id)
     usersButMe.sort()
     this.members = usersButMe
-
-    await Promise.all(usersButMe.map(user => membersCache.users.put(user)))
   }
 
   getMessageComponent(userId: string) {

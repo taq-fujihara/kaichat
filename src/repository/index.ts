@@ -8,6 +8,9 @@ import {
 import ChatMessage from '@/models/ChatMessage'
 import { Room } from '@/models/Room'
 import { User } from '@/models/User'
+import { MessagesCache } from '@/repository/MessagesCache'
+
+let messageCache: MessagesCache
 
 /**
  * 表示できる直近のメッセージ数
@@ -57,12 +60,36 @@ function docToChatMessageModel(docRef: DocumentSnapshot): ChatMessage {
     createdAt: data.createdAt?.toDate(), // サーバー時刻はまだ入っていないことがある
   }
 }
+
+async function cacheMessages(messages: ChatMessage[]) {
+  let cachedCount = 0
+  for (const message of messages) {
+    if (await messageCache.messages.get(message.id)) {
+      // already cached
+      await messageCache.messages.put(message)
+    } else {
+      await messageCache.messages.add(message)
+      cachedCount++
+    }
+  }
+  return cachedCount
+}
+
 /**
  * バックエンドデータ管理
  */
 export default class Repository {
   static get chatMessageLimit(): number {
     return CHAT_MESSAGE_LIMIT
+  }
+
+  static initCache(roomId: string) {
+    Repository.disposeCache()
+    messageCache = new MessagesCache(roomId)
+  }
+
+  static disposeCache() {
+    if (messageCache) messageCache.close()
   }
 
   static async createUser(user: User) {
@@ -240,10 +267,22 @@ export default class Repository {
     )
   }
 
-  static onMessagesChange(
+  static async onMessagesChange(
     roomId: string,
     onNext: (messages: Array<ChatMessage>) => void,
-  ): () => void {
+  ): Promise<() => void> {
+    const cachedMessages = await messageCache.messages
+      .orderBy('createdAt')
+      .reverse()
+      .limit(Repository.chatMessageLimit)
+      .toArray()
+
+    cachedMessages.reverse()
+
+    if (cachedMessages.length > 0) {
+      onNext(cachedMessages)
+    }
+
     return db
       .collection(`/rooms/${roomId}/messages`)
       .orderBy('createdAt', 'desc')
@@ -259,32 +298,7 @@ export default class Repository {
 
         messages.reverse()
 
-        onNext(messages)
-      })
-  }
-
-  static async onMessagesChangeFrom(
-    roomId: string,
-    messageId: string,
-    onNext: (messages: Array<ChatMessage>) => void,
-  ) {
-    const doc = await db.doc(`/rooms/${roomId}/messages/${messageId}`).get()
-
-    return db
-      .collection(`/rooms/${roomId}/messages`)
-      .orderBy('createdAt', 'desc')
-      .endBefore(doc)
-      .limit(CHAT_MESSAGE_LIMIT)
-      .onSnapshot(async snapshot => {
-        const messages = new Array<ChatMessage>()
-        snapshot.forEach(doc => {
-          const model = docToChatMessageModel(doc)
-          if (model.createdAt) {
-            messages.push(model)
-          }
-        })
-
-        messages.reverse()
+        cacheMessages(messages)
 
         onNext(messages)
       })
