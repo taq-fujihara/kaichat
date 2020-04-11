@@ -39,6 +39,7 @@ export const storage = _storage.ref()
 export const functions = app.functions()
 export const serverTimestamp = firestore.FieldValue.serverTimestamp
 export const arrayUnion = firestore.FieldValue.arrayUnion
+export const arrayRemove = firestore.FieldValue.arrayRemove
 export const messaging = app.messaging()
 
 export function signOut() {
