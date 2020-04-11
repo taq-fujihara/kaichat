@@ -6,12 +6,13 @@ import { spawn } from 'child-process-promise'
 import * as path from 'path'
 import * as os from 'os'
 import * as fs from 'fs'
+import key from './.key.json'
 
 const adminConfig = JSON.parse(process.env.FIREBASE_CONFIG || '{}')
 adminConfig.credential = admin.credential.cert({
-  projectId: process.env.GCLOUD_PROJECT,
-  privateKey: functions.config().app.privatekey,
-  clientEmail: functions.config().app.clientemail,
+  projectId: key.project_id,
+  privateKey: key.private_key,
+  clientEmail: key.client_email,
 })
 admin.initializeApp(adminConfig)
 
@@ -138,8 +139,10 @@ export const sendNotification = functions.firestore
       return
     }
 
-    let imageUrl
+    let title: string = user.name
+    let imageUrl: string | undefined
     if (data?.type === 'image') {
+      title = `${user.name}が画像をアップロードしました`
       const thumbnailPath = data?.imageThumbnailPath
       const file = storage.bucket().file(thumbnailPath)
       imageUrl = (
@@ -155,7 +158,7 @@ export const sendNotification = functions.firestore
     await admin.messaging().sendMulticast({
       tokens: recipientTokens,
       notification: {
-        title: user.name,
+        title,
         body: message,
         imageUrl: imageUrl,
       },
@@ -168,12 +171,74 @@ export const sendNotification = functions.firestore
           tag: roomId,
           badge: '/img/badges/badge-128x128.png',
           renotify: true,
+          actions: [{ action: 'heart', title: 'Like!' }],
+          data: {
+            roomId,
+            messageId: snapshot.id,
+          },
         },
         fcmOptions: {
           link: `/rooms/${roomId}/messages`,
         },
       },
     })
+  })
+
+export const onMessageChange = functions.firestore
+  .document('/rooms/{roomId}/messages/{messageId}')
+  .onUpdate(async (change, context) => {
+    const roomId: string = context.params.roomId
+    const beforeData = change.before.data()
+    const afterData = change.after.data()
+
+    if (!beforeData || !afterData) {
+      console.log('failed to get data')
+      return
+    }
+
+    // someone likes the message?
+    const beforeLikes: string[] = beforeData.likes || []
+    const afterLikes: string[] = afterData.likes || []
+    if (beforeLikes.length < afterLikes.length) {
+      const whoLiked = afterLikes.filter(uId => !beforeLikes.includes(uId))
+      if (!(whoLiked.length === 1 && whoLiked[0] === afterData.userId)) {
+        const author = await db.doc(`/fcmTokens/${afterData.userId}`).get()
+        const token = author.data()?.token
+
+        const userNamesLiked = await Promise.all(
+          whoLiked.map(async userId => {
+            const doc = await db.doc(`/users/${userId}`).get()
+            const data = doc.data()
+            if (!data) {
+              return ''
+            }
+            return data.name as string
+          }),
+        )
+
+        await admin.messaging().send({
+          token,
+          notification: {
+            title: `${userNamesLiked.join('、')}がLike!をつけました`,
+            body: afterData.text,
+          },
+          webpush: {
+            headers: {
+              Urgency: 'normal',
+            },
+            notification: {
+              // icon: user.photoUrl,
+              tag: roomId,
+              badge: '/img/badges/badge-128x128.png',
+              renotify: true,
+            },
+            fcmOptions: {
+              link: `/rooms/${roomId}/messages`,
+            },
+          },
+        })
+      }
+    }
   })
 
 export const addImageMessage = functions.https.onCall(async (data, context) => {
@@ -304,5 +369,34 @@ export const getImagePublicUrl = functions.https.onCall(
           .format(),
       })
     )[0]
+  },
+)
+
+export const receiveLikeRequest = functions.https.onCall(
+  async (data, context) => {
+    if (!context.auth) {
+      throw new functions.https.HttpsError('unauthenticated', 'signin required')
+    }
+
+    const requestUserId = context.auth.uid
+    const roomId = data.roomId
+    const roomDoc = await db.doc(`/rooms/${roomId}`).get()
+    const room = roomDoc.data()
+    if (!room) {
+      throw new Error(`Room not found: ${roomId}`)
+    }
+
+    const roomMembers: string[] = room.members
+
+    if (!roomMembers.includes(requestUserId)) {
+      throw new Error(
+        `You are not allowed to fetch members of this room: ${roomId}`,
+      )
+    }
+
+    const messageId = data.messageId
+    await db.doc(`/rooms/${roomId}/messages/${messageId}`).update({
+      likes: admin.firestore.FieldValue.arrayUnion(requestUserId),
+    })
   },
 )
