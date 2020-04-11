@@ -9,7 +9,7 @@
       :background-color="avatarBackgroundColor"
     />
 
-    <div class="chat-message">
+    <div class="chat-message" @dblclick="$emit('heart')">
       <ChatMessageArrow large white class="chat-message__arrow--back" />
       <div class="chat-message__background-bottom"></div>
       <ChatMessageArrow class="chat-message__arrow--front" />
@@ -30,7 +30,28 @@
             @click="$emit('click-image', imagePath)"
           />
         </div>
-        <ChatMessageCreatedAt :created-at="createdAt" />
+        <div class="chat-message__footer">
+          <div class="chat-message__footer__likes">
+            <i
+              class="fa-heart chat-message__footer__likes__heart"
+              :class="{
+                fas: someoneLikes,
+                far: !someoneLikes,
+                'chat-message__footer__likes__heart--empty': !someoneLikes,
+              }"
+              @click.stop="$emit('heart')"
+            />
+            <span
+              v-if="someoneLikes"
+              class="chat-message__footer__likes__count"
+            >
+              {{ likeCount }}
+            </span>
+          </div>
+          <div class="chat-message__footer__created_at">
+            <ChatMessageCreatedAt :created-at="createdAt" />
+          </div>
+        </div>
       </div>
     </div>
 
@@ -59,6 +80,7 @@ import { User } from '@/models/User'
 export default class ChatMessage extends Vue {
   @Prop() private type!: 'text' | 'image'
   @Prop() private text!: string
+  @Prop() private likes!: string[]
   @Prop() private imagePath!: string
   @Prop() private imageThumbnailPath!: string
   @Prop() private thumbnailBase64!: string
@@ -70,6 +92,13 @@ export default class ChatMessage extends Vue {
   @Prop() private isNextMe!: boolean
 
   private imageUrl: string | null = null
+
+  private get someoneLikes() {
+    return this.likeCount > 0
+  }
+  private get likeCount() {
+    return this.likes ? this.likes.length : 0
+  }
 
   async created() {
     if (this.thumbnailBase64) {
@@ -215,6 +244,36 @@ export default class ChatMessage extends Vue {
     }
     &--back {
       top: 15px;
+    }
+  }
+
+  &__footer {
+    display: flex;
+
+    width: 100%;
+
+    margin-top: var(--spacing-small);
+
+    font-size: var(--font-size-xsmall);
+
+    &__likes {
+      flex: 1;
+
+      &__heart {
+        color: var(--app-color-red);
+        transition: all 200ms linear;
+        &--empty {
+          color: var(--app-color-gray);
+        }
+      }
+
+      &__count {
+        color: var(--app-color-gray);
+      }
+    }
+
+    &__created_at {
+      color: var(--app-color-gray);
     }
   }
 }

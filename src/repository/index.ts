@@ -1,9 +1,9 @@
 import {
   db,
   functions,
-  storage,
   serverTimestamp,
   arrayUnion,
+  arrayRemove,
 } from '@/firebaseApp'
 import ChatMessage from '@/models/ChatMessage'
 import { Room } from '@/models/Room'
@@ -49,6 +49,7 @@ function docToChatMessageModel(docRef: DocumentSnapshot): ChatMessage {
     id: docRef.id,
     type: data.type || 'text',
     text: data.text,
+    likes: data.likes || [],
     imagePath: data.imagePath,
     imageThumbnailPath: data.imageThumbnailPath,
     thumbnailBase64: data.thumbnailBase64,
@@ -303,6 +304,17 @@ export default class Repository {
     })
 
     return docRef.id
+  }
+
+  static async likeMessage(
+    userId: string,
+    roomId: string,
+    messageId: string,
+    like: boolean,
+  ): Promise<void> {
+    await db.doc(`/rooms/${roomId}/messages/${messageId}`).update({
+      likes: like ? arrayRemove(userId) : arrayUnion(userId),
+    })
   }
 
   static async setToken(userId: string, token: string): Promise<void> {

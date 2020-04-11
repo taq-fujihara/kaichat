@@ -22,8 +22,6 @@ export default class ChatMessageCreatedAt extends Vue {
 
 <style lang="scss" scoped>
 .chat-message__created-at {
-  margin-top: var(--spacing-small);
-  text-align: right;
   font-size: var(--font-size-xsmall);
   color: var(--app-color-gray);
 }

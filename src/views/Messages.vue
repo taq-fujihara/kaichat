@@ -23,12 +23,14 @@
         :key="message.id"
         :type="message.type"
         :text="message.text"
+        :likes="message.likes"
         :image-path="message.imagePath"
         :image-thumbnail-path="message.imageThumbnailPath"
         :thumbnail-base64="message.thumbnailBase64"
         :users-read-this-message="message.meta.usersReadThisMessage"
         :created-at="message.createdAt"
         :photoUrl="findPhotoUrl(message.userId)"
+        @heart="heartMessage(message)"
         @click-image="handleImageClick(message)"
       />
     </div>
@@ -118,9 +120,6 @@ import { MembersCache } from '@/repository/MembersCache'
 import { User } from '@/models/User'
 import ChatMessage from '@/models/ChatMessage'
 import { shrinkImage } from '@/utils/image'
-
-// 何回メッセージの変更通知を受けたらハンドラを再取得するか
-const REFRESH_COUNT = 5
 
 let messageCache: MessagesCache
 let membersCache: MembersCache
@@ -246,21 +245,6 @@ export default class Messages extends Vue {
   // 常に最新xx件の受信をするのではなく、定期敵に監視個数を減らす。
   private messageSubscribeCount = 0
 
-  @Watch('messages')
-  async onMessage() {
-    await this.$nextTick()
-    scrollToBottom()
-
-    this.messageSubscribeCount += 1
-    if (this.messageSubscribeCount > REFRESH_COUNT) {
-      const lastCachedMessage = await getLastCachedMessage()
-      lastCachedMessage
-        ? await this.loadMessagesFrom(lastCachedMessage)
-        : this.loadMessages()
-      this.messageSubscribeCount = 0
-    }
-  }
-
   // ******************************************************
   // Lifecycle hooks
   // ******************************************************
@@ -279,14 +263,8 @@ export default class Messages extends Vue {
       // この部分は後続の処理を待たずに描画させる
       await this.$nextTick()
 
-      const lastCachedMessage =
-        messagesFromCache.length > 0
-          ? messagesFromCache.slice(-1)[0]
-          : undefined
-
-      lastCachedMessage
-        ? await this.loadMessagesFrom(lastCachedMessage)
-        : this.loadMessages()
+      this.loadMessages()
+      scrollToBottom()
     } catch (error) {
       alert('メッセージがロードできませんでした！部屋一覧に戻ります。')
       this.$router.push('/rooms')
@@ -369,8 +347,14 @@ export default class Messages extends Vue {
     this.unsubscribeMessages = Repository.onMessagesChange(
       this.roomId,
       async messages => {
+        const oldLastMessageId =
+          this.messages.length > 0 ? this.messages.slice(-1)[0].id : undefined
+
         await cacheMessages(messages)
         this.setMessages(messages)
+
+        const newLastMessageId =
+          this.messages.length > 0 ? this.messages.slice(-1)[0].id : undefined
 
         // 既読処理
         if (messages.length === 0) {
@@ -384,6 +368,10 @@ export default class Messages extends Vue {
           }
         } else {
           await this.updateReadUntil(message.id)
+        }
+
+        if (oldLastMessageId !== newLastMessageId) {
+          scrollToBottom()
         }
       },
     )
@@ -414,55 +402,6 @@ export default class Messages extends Vue {
       this.roomId,
       this.$store.state.user.id,
       messageId,
-    )
-  }
-
-  /**
-   * 指定のメッセージ以降のメッセージをリポジトリからロードする
-   */
-  async loadMessagesFrom(message: ChatMessage) {
-    this.unsubscribeMessages()
-
-    this.unsubscribeMessages = await Repository.onMessagesChangeFrom(
-      this.roomId,
-      message.id,
-      async newMessages => {
-        if (newMessages.length === 0) {
-          return
-        }
-
-        // ちょっと横着して、新着メッセージをキャッシュしたあとに改めて
-        // キャッシュから規定件数取得して洗い替えしている。
-        // 一回に表示する件数はそんなに多くないから良いが、ちゃんと今のmessagesと
-        // マージすることを考える。
-        await cacheMessages(newMessages)
-
-        const cachedMessages = await messageCache.messages
-          .orderBy('createdAt')
-          .reverse()
-          .limit(Repository.chatMessageLimit)
-          .toArray()
-
-        // 最後からxx件キャッシュから取得しているが、並びが降順になってしまっているので、
-        // 画面表示上の昇順に直す。
-        cachedMessages.reverse()
-
-        this.setMessages(cachedMessages)
-
-        // 既読処理
-        if (newMessages.length === 0) {
-          return
-        }
-        const message = newMessages.slice(-1)[0]
-        if (document.hidden) {
-          readCache = {
-            userId: this.$store.state.user.id,
-            messageId: message.id,
-          }
-        } else {
-          await this.updateReadUntil(message.id)
-        }
-      },
     )
   }
 
@@ -540,6 +479,15 @@ export default class Messages extends Vue {
     await Repository.uploadImage(this.roomId, file.name, shrinked)
 
     this.uploadingImage = false
+  }
+
+  private async heartMessage(message: ChatMessage) {
+    await Repository.likeMessage(
+      this.$store.state.user.id,
+      this.roomId,
+      message.id,
+      message.likes ? message.likes.includes(this.$store.state.user.id) : false,
+    )
   }
 
   private async handleImageClick(message: ChatMessage) {

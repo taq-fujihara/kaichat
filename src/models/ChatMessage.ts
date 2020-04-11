@@ -4,6 +4,7 @@ type ChatMessage = {
   id: string
   type: 'text' | 'image'
   text?: string
+  likes: string[]
   imagePath?: string
   imageThumbnailPath?: string
   thumbnailBase64?: string
