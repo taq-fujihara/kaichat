@@ -1,16 +1,12 @@
-import {
-  db,
-  functions,
-  serverTimestamp,
-  arrayUnion,
-  arrayRemove,
-} from '@/firebaseApp'
+import { db, functions, serverTimestamp, arrayUnion } from '@/firebaseApp'
 import ChatMessage from '@/models/ChatMessage'
 import { Room } from '@/models/Room'
 import { User } from '@/models/User'
 import { MessagesCache } from '@/repository/MessagesCache'
+import { MembersCache } from '@/repository/MembersCache'
 
 let messageCache: MessagesCache
+let memberCache: MembersCache
 
 /**
  * 表示できる直近のメッセージ数
@@ -86,10 +82,12 @@ export default class Repository {
   static initCache(roomId: string) {
     Repository.disposeCache()
     messageCache = new MessagesCache(roomId)
+    memberCache = new MembersCache(roomId)
   }
 
   static disposeCache() {
     if (messageCache) messageCache.close()
+    if (memberCache) memberCache.close()
   }
 
   static async createUser(user: User) {
@@ -221,9 +219,21 @@ export default class Repository {
    *
    * @param roomId 部屋ID
    */
-  static async getRoomMembers(roomId: string): Promise<User[]> {
+  static async getRoomMembers(
+    roomId: string,
+    callback: (users: User[]) => void,
+  ): Promise<void> {
+    const cachedMembers = await memberCache.users.toArray()
+    if (cachedMembers.length > 0) {
+      callback(cachedMembers)
+    }
+
     const f = await functions.httpsCallable('getRoomMembers')({ roomId })
-    return f.data
+
+    const members: User[] = f.data
+    callback(members)
+
+    await Promise.all(members.map(user => memberCache.users.put(user)))
   }
 
   /**
@@ -320,14 +330,10 @@ export default class Repository {
     return docRef.id
   }
 
-  static async likeMessage(
-    userId: string,
-    roomId: string,
-    messageId: string,
-    like: boolean,
-  ): Promise<void> {
-    await db.doc(`/rooms/${roomId}/messages/${messageId}`).update({
-      likes: like ? arrayRemove(userId) : arrayUnion(userId),
+  static async likeMessage(roomId: string, messageId: string): Promise<void> {
+    await functions.httpsCallable('receiveLikeRequest')({
+      roomId,
+      messageId,
     })
   }
 

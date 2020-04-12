@@ -172,9 +172,6 @@ export default class Messages extends Vue {
   // 送信メッセージ
   private message = ''
 
-  // メッセージ送信中フラグ
-  private sendingMessage = false
-
   // 部屋メンバー
   private members = new Array<User>()
 
@@ -198,10 +195,6 @@ export default class Messages extends Vue {
     // do nothing
   }
 
-  // 新着メッセージ更新回数
-  // 常に最新xx件の受信をするのではなく、定期敵に監視個数を減らす。
-  private messageSubscribeCount = 0
-
   // ******************************************************
   // Lifecycle hooks
   // ******************************************************
@@ -222,7 +215,7 @@ export default class Messages extends Vue {
     }
 
     try {
-      this.loadMembers()
+      await this.loadMembers()
     } catch (error) {
       alert('メンバーがロードできませんでした！部屋一覧に戻ります。')
       this.$router.push('/rooms')
@@ -294,16 +287,17 @@ export default class Messages extends Vue {
         const oldLastMessageId =
           this.messages.length > 0 ? this.messages.slice(-1)[0].id : undefined
 
-        // await cacheMessages(messages)
         this.setMessages(messages)
 
         const newLastMessageId =
           this.messages.length > 0 ? this.messages.slice(-1)[0].id : undefined
+        const containsNewMessage = oldLastMessageId !== newLastMessageId
 
-        // 既読処理
         if (messages.length === 0) {
           return
         }
+
+        // 既読処理
         const message = messages.slice(-1)[0]
         if (document.hidden) {
           readCache = {
@@ -314,7 +308,7 @@ export default class Messages extends Vue {
           await this.updateReadUntil(message.id)
         }
 
-        if (oldLastMessageId !== newLastMessageId) {
+        if (containsNewMessage) {
           scrollToBottom()
         }
       },
@@ -338,10 +332,11 @@ export default class Messages extends Vue {
   }
 
   async loadMembers() {
-    const users = await Repository.getRoomMembers(this.roomId)
-    const usersButMe = users.filter(u => u.id !== this.$store.state.user.id)
-    usersButMe.sort()
-    this.members = usersButMe
+    await Repository.getRoomMembers(this.roomId, users => {
+      const usersButMe = users.filter(u => u.id !== this.$store.state.user.id)
+      usersButMe.sort()
+      this.members = usersButMe
+    })
   }
 
   getMessageComponent(userId: string) {
@@ -353,9 +348,9 @@ export default class Messages extends Vue {
   }
 
   findPhotoUrl(userId: string) {
-    const messageCache = photoUrlCache.get(userId)
-    if (messageCache) {
-      return messageCache
+    const cache = photoUrlCache.get(userId)
+    if (cache) {
+      return cache
     }
     const users: User[] = this.members
     const user = users.find(m => m.id === userId)
@@ -373,7 +368,6 @@ export default class Messages extends Vue {
     }
 
     this.message = ''
-    this.sendingMessage = true
 
     try {
       await Repository.addMessage(
@@ -382,11 +376,8 @@ export default class Messages extends Vue {
         message,
       )
     } catch (error) {
-      this.sendingMessage = false
       throw new Error(error)
     }
-
-    this.sendingMessage = false
   }
 
   keyEnter() {
@@ -408,12 +399,7 @@ export default class Messages extends Vue {
   }
 
   private async heartMessage(message: ChatMessage) {
-    await Repository.likeMessage(
-      this.$store.state.user.id,
-      this.roomId,
-      message.id,
-      message.likes ? message.likes.includes(this.$store.state.user.id) : false,
-    )
+    await Repository.likeMessage(this.roomId, message.id)
   }
 
   private async handleImageClick(message: ChatMessage) {

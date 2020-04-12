@@ -87,7 +87,9 @@ export default {
     }
 
     try {
-      this.members = await Repository.getRoomMembers(this.roomId)
+      await Repository.getRoomMembers(this.roomId, members => {
+        this.members = members
+      })
     } catch (error) {
       alert('メンバーが取得できませんでした！部屋一覧に戻ります。')
       this.$router.push('/rooms')
