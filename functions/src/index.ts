@@ -394,9 +394,18 @@ export const receiveLikeRequest = functions.https.onCall(
       )
     }
 
-    const messageId = data.messageId
-    await db.doc(`/rooms/${roomId}/messages/${messageId}`).update({
-      likes: admin.firestore.FieldValue.arrayUnion(requestUserId),
+    const messageDoc = await db
+      .doc(`/rooms/${roomId}/messages/${data.messageId}`)
+      .get()
+
+    const exists = messageDoc.data()?.likes
+      ? messageDoc.data()?.likes.includes(requestUserId)
+      : false
+
+    await db.doc(`/rooms/${roomId}/messages/${data.messageId}`).update({
+      likes: exists
+        ? admin.firestore.FieldValue.arrayRemove(requestUserId)
+        : admin.firestore.FieldValue.arrayUnion(requestUserId),
     })
   },
 )
