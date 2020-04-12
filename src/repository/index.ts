@@ -58,17 +58,7 @@ function docToChatMessageModel(docRef: DocumentSnapshot): ChatMessage {
 }
 
 async function cacheMessages(messages: ChatMessage[]) {
-  let cachedCount = 0
-  for (const message of messages) {
-    if (await messageCache.messages.get(message.id)) {
-      // already cached
-      await messageCache.messages.put(message)
-    } else {
-      await messageCache.messages.add(message)
-      cachedCount++
-    }
-  }
-  return cachedCount
+  await Promise.all(messages.map(message => messageCache.messages.put(message)))
 }
 
 /**
@@ -279,7 +269,7 @@ export default class Repository {
 
   static async onMessagesChange(
     roomId: string,
-    onNext: (messages: Array<ChatMessage>) => void,
+    callback: (messages: Array<ChatMessage>) => void,
   ): Promise<() => void> {
     const cachedMessages = await messageCache.messages
       .orderBy('createdAt')
@@ -290,7 +280,7 @@ export default class Repository {
     cachedMessages.reverse()
 
     if (cachedMessages.length > 0) {
-      onNext(cachedMessages)
+      callback(cachedMessages)
     }
 
     return db
@@ -310,7 +300,7 @@ export default class Repository {
 
         cacheMessages(messages)
 
-        onNext(messages)
+        callback(messages)
       })
   }
 
