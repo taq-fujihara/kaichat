@@ -16,7 +16,7 @@
   "dependencies": {
     "blueimp-load-image": "^2.31.0",
     "core-js": "^3.6.4",
-    "dexie": "^2.0.4",
+    "dexie": "^3.2.2",
     "firebase": "^7.9.1",
     "firebaseui": "^4.4.0",
     "register-service-worker": "^1.6.2",
